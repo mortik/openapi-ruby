@@ -1,0 +1,384 @@
+# openapi_rails
+
+A unified OpenAPI 3.1 toolkit for Rails that combines test-driven spec generation, reusable schema components as Ruby classes, and runtime request/response validation middleware. Works with both RSpec and Minitest.
+
+Replaces [rswag](https://github.com/rswag/rswag), [rswag-schema-components](https://github.com/101skills-gmbh/rswag-schema-components), and [committee](https://github.com/interagent/committee) with a single gem.
+
+## Key Features
+
+- **OpenAPI 3.1** with JSON Schema 2020-12 (via [json_schemer](https://github.com/davishmcclurg/json_schemer))
+- **Test-framework agnostic** — works with RSpec and Minitest
+- **Schema components** as Ruby classes with inheritance
+- **Runtime middleware** for request/response validation with deep type checking
+- **Strong params** derived from schema components
+- **Spec generation** from test definitions
+- **Optional Swagger UI** via CDN
+
+## Requirements
+
+- Ruby >= 3.2
+- Rails >= 7.0
+
+## Installation
+
+Add to your Gemfile:
+
+```ruby
+gem "openapi_rails"
+```
+
+Run the install generator:
+
+```bash
+rails generate openapi_rails:install
+```
+
+This creates:
+
+- `config/initializers/openapi_rails.rb` — configuration
+- `spec/openapi_helper.rb` or `test/openapi_helper.rb` — test helper
+- `app/api_components/` — directory for schema components
+- `swagger/` — output directory for generated specs
+- Engine mount in `config/routes.rb`
+
+## Configuration
+
+```ruby
+# config/initializers/openapi_rails.rb
+OpenapiRails.configure do |config|
+  config.specs = {
+    public_api: {
+      info: { title: "My API", version: "v1" },
+      servers: [{ url: "/" }]
+    }
+  }
+
+  config.component_paths = ["app/api_components"]
+  config.camelize_keys = true
+  config.spec_output_dir = "swagger"
+  config.spec_output_format = :yaml
+  config.validate_responses_in_tests = true
+
+  # Runtime middleware (disabled by default)
+  config.request_validation = :disabled   # :enabled, :disabled, :warn_only
+  config.response_validation = :disabled
+
+  # Optional Swagger UI (disabled by default)
+  config.ui_enabled = false
+end
+```
+
+## Schema Components
+
+Define your API schemas as Ruby classes:
+
+```ruby
+# app/api_components/schemas/user.rb
+class Schemas::User
+  include OpenapiRails::Components::Base
+
+  schema(
+    type: :object,
+    required: %w[id name email],
+    properties: {
+      id: { type: :integer, readOnly: true },
+      name: { type: :string },
+      email: { type: :string },
+      created_at: { type: [:string, :null], format: "date-time" }
+    }
+  )
+end
+```
+
+### Inheritance
+
+```ruby
+class Schemas::AdminUser < Schemas::User
+  schema(
+    properties: {
+      role: { type: :string, enum: %w[admin superadmin] }
+    }
+  )
+end
+```
+
+Child schemas deep-merge with their parent — `AdminUser` has all of `User`'s properties plus `role`.
+
+### Component Types
+
+```ruby
+class SecuritySchemes::BearerAuth
+  include OpenapiRails::Components::Base
+  component_type :securitySchemes
+
+  schema(
+    type: :http,
+    scheme: :bearer,
+    bearerFormat: "JWT"
+  )
+end
+```
+
+Supported types: `schemas`, `parameters`, `securitySchemes`, `requestBodies`, `responses`, `headers`, `examples`, `links`, `callbacks`.
+
+### Key Transformation
+
+By default, snake_case keys are converted to camelCase in the output. Disable globally with `config.camelize_keys = false` or per-component:
+
+```ruby
+class Schemas::User
+  include OpenapiRails::Components::Base
+  skip_key_transformation true
+  # ...
+end
+```
+
+### Scopes
+
+Assign components to scopes for multiple API specs:
+
+```ruby
+class Schemas::AdminUser
+  include OpenapiRails::Components::Base
+  component_scopes :admin
+  # ...
+end
+```
+
+### Strong Params
+
+Schema components can derive Rails strong params permit lists:
+
+```ruby
+Schemas::UserInput.permitted_params
+# => [:name, :email]
+
+# Handles nested objects and arrays:
+# [:title, { tags: [] }, { address: [:street, :city] }]
+```
+
+Use the controller helper:
+
+```ruby
+class Api::V1::UsersController < ActionController::API
+  include OpenapiRails::ControllerHelpers
+
+  def create
+    user = User.new(openapi_permit(Schemas::UserInput))
+    # ...
+  end
+end
+```
+
+Works with [ActionPolicy](https://github.com/palkan/action_policy) — use `permitted_params` inside your policy's `params_filter` block.
+
+### Component Generator
+
+```bash
+rails generate openapi_rails:component User schemas
+rails generate openapi_rails:component BearerAuth security_schemes
+```
+
+## Testing with RSpec
+
+```ruby
+# spec/openapi_helper.rb
+require "openapi_rails/rspec"
+```
+
+```ruby
+# spec/requests/users_spec.rb
+require "openapi_helper"
+
+RSpec.describe "Users API", type: :openapi do
+  path "/api/v1/users" do
+    get "List users" do
+      tags "Users"
+      operationId "listUsers"
+      produces "application/json"
+
+      response 200, "returns all users" do
+        schema type: :array, items: { "$ref" => "#/components/schemas/User" }
+
+        run_test! do
+          expect(JSON.parse(response.body).length).to be > 0
+        end
+      end
+    end
+
+    post "Create a user" do
+      tags "Users"
+      consumes "application/json"
+
+      request_body required: true, content: {
+        "application/json" => {
+          schema: { "$ref" => "#/components/schemas/UserInput" }
+        }
+      }
+
+      response 201, "user created" do
+        schema "$ref" => "#/components/schemas/User"
+        let(:request_body) { { name: "Jane", email: "jane@example.com" } }
+        run_test!
+      end
+
+      response 422, "validation errors" do
+        schema "$ref" => "#/components/schemas/ValidationErrors"
+        let(:request_body) { { name: "" } }
+        run_test!
+      end
+    end
+  end
+
+  path "/api/v1/users/{id}" do
+    parameter name: :id, in: :path, schema: { type: :integer }, required: true
+
+    get "Get a user" do
+      response 200, "user found" do
+        schema "$ref" => "#/components/schemas/User"
+        let(:id) { User.create!(name: "Jane", email: "jane@example.com").id }
+        run_test!
+      end
+
+      response 404, "not found" do
+        let(:id) { 0 }
+        run_test!
+      end
+    end
+  end
+end
+```
+
+### DSL Reference
+
+| Method | Level | Description |
+|--------|-------|-------------|
+| `path(template, &block)` | Top | Define an API path |
+| `get/post/put/patch/delete(summary, &block)` | Path | Define an operation |
+| `tags(*tags)` | Operation | Tag the operation |
+| `operationId(id)` | Operation | Set operation ID |
+| `description(text)` | Operation | Operation description |
+| `deprecated(bool)` | Operation | Mark as deprecated |
+| `consumes(*types)` | Operation | Request content types |
+| `produces(*types)` | Operation | Response content types |
+| `security(schemes)` | Operation | Security requirements |
+| `parameter(name:, in:, schema:, **opts)` | Path/Operation | Define a parameter |
+| `request_body(required:, content:)` | Operation | Define request body |
+| `response(status, description, &block)` | Operation | Define expected response |
+| `schema(definition)` | Response | Response body schema |
+| `header(name, schema:, **opts)` | Response | Response header |
+| `run_test!(&block)` | Response | Execute request and validate |
+
+## Testing with Minitest
+
+```ruby
+# test/test_helper.rb
+require "openapi_rails/minitest"
+```
+
+```ruby
+# test/integration/users_test.rb
+require "test_helper"
+
+class UsersApiTest < ActionDispatch::IntegrationTest
+  include OpenapiRails::Adapters::Minitest::DSL
+
+  openapi_spec :public_api
+
+  api_path "/api/v1/users" do
+    get "List users" do
+      tags "Users"
+      produces "application/json"
+
+      response 200, "returns all users" do
+        schema type: :array, items: { "$ref" => "#/components/schemas/User" }
+      end
+    end
+
+    post "Create a user" do
+      consumes "application/json"
+
+      request_body required: true, content: {
+        "application/json" => {
+          schema: { "$ref" => "#/components/schemas/UserInput" }
+        }
+      }
+
+      response 201, "user created" do
+        schema "$ref" => "#/components/schemas/User"
+      end
+    end
+  end
+
+  test "GET /api/v1/users returns users" do
+    User.create!(name: "Jane", email: "jane@example.com")
+
+    assert_api_response :get, 200 do
+      assert_equal 1, parsed_body.length
+    end
+  end
+
+  test "POST /api/v1/users creates a user" do
+    assert_api_response :post, 201, body: { name: "Jane", email: "jane@example.com" } do
+      assert_equal "Jane", parsed_body["name"]
+    end
+  end
+end
+```
+
+## Spec Generation
+
+Generate OpenAPI spec files after running tests:
+
+```bash
+rake openapi_rails:generate
+```
+
+Or automatically after the test suite via the `after(:suite)` / `Minitest.after_run` hooks (enabled by default).
+
+## Runtime Middleware
+
+Validate requests and responses against your OpenAPI spec at runtime:
+
+```ruby
+OpenapiRails.configure do |config|
+  config.request_validation = :enabled    # :enabled, :disabled, :warn_only
+  config.response_validation = :enabled
+end
+```
+
+The middleware validates:
+
+- **Requests**: parameter types, required parameters, request body schema (required fields, types, constraints like `minLength`), content types
+- **Responses**: body schema with full `$ref` resolution, required fields, types
+
+Invalid requests return `400` with details. Invalid responses return `500`. In `:warn_only` mode, validation errors are logged but requests pass through.
+
+### Strict Mode
+
+```ruby
+config.strict_mode = true  # 404 for undocumented paths
+```
+
+## Swagger UI
+
+Enable optional Swagger UI:
+
+```ruby
+OpenapiRails.configure do |config|
+  config.ui_enabled = true
+end
+```
+
+Visit `/api-docs/ui` to see your API documentation. Spec files are served at `/api-docs/specs/:name`.
+
+## Engine Routes
+
+```ruby
+# config/routes.rb
+mount OpenapiRails::Engine => "/api-docs"
+```
+
+## License
+
+MIT
