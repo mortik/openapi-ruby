@@ -17,3 +17,4 @@ jobs:
           release-type: ruby
           package-name: openapi_rails
           version-file: lib/openapi_rails/version.rb
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
