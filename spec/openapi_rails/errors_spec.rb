@@ -10,7 +10,7 @@ end
 
 RSpec.describe OpenapiRails::InvalidDocumentError do
   it "includes validation errors in the message" do
-    errors = [{ "error" => "missing title" }, { "error" => "bad version" }]
+    errors = [{"error" => "missing title"}, {"error" => "bad version"}]
     error = described_class.new(errors)
 
     expect(error.message).to include("missing title")

@@ -25,11 +25,11 @@ module OpenapiRails
       private
 
       def expand_path
-        path = @operation.parameters.select { |p| p["in"] == "path" }.reduce(@response || "") do |tmpl, param|
+        @operation.parameters.select do |p|
+          p["in"] == "path"
+        end.each_with_object(@response || "") do |_param, tmpl|
           # This is just the template — actual path is built from the context's path_template
-          tmpl
         end
-        path
       end
 
       def build_query_params
@@ -63,10 +63,8 @@ module OpenapiRails
         return nil unless @body_value
 
         if @body_value.is_a?(Hash) || @body_value.is_a?(Array)
-          @body_value
-        else
-          @body_value
         end
+        @body_value
       end
 
       def deep_stringify(value)

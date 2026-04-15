@@ -26,9 +26,7 @@ module OpenapiRails
         end
 
         def schema(definition = nil)
-          if definition
-            self._schema_definition = _schema_definition.deep_merge(deep_stringify(definition))
-          end
+          self._schema_definition = _schema_definition.deep_merge(deep_stringify(definition)) if definition
           _schema_definition
         end
 
@@ -57,9 +55,7 @@ module OpenapiRails
         def to_openapi
           definition = _schema_definition.deep_dup
 
-          if _component_type == :schemas
-            definition["title"] ||= component_name
-          end
+          definition["title"] ||= component_name if _component_type == :schemas
 
           if should_transform_keys?
             KeyTransformer.camelize_keys(definition)

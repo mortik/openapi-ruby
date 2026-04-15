@@ -15,15 +15,15 @@ RSpec.describe OpenapiRails::Generator::SpecWriter do
       config.spec_output_format = :yaml
       config.specs = {
         public_api: {
-          info: { title: "Test API", version: "1.0.0" },
-          servers: [{ url: "https://api.example.com" }]
+          info: {title: "Test API", version: "1.0.0"},
+          servers: [{url: "https://api.example.com"}]
         }
       }
     end
   end
 
   after do
-    FileUtils.rm_rf(output_dir) if Dir.exist?(output_dir)
+    FileUtils.rm_rf(output_dir)
   end
 
   describe "#write!" do
@@ -36,7 +36,7 @@ RSpec.describe OpenapiRails::Generator::SpecWriter do
       path = writer.write!
 
       expect(File.exist?(path)).to be true
-      content = YAML.safe_load(File.read(path))
+      content = YAML.safe_load_file(path)
       expect(content["openapi"]).to eq("3.1.0")
       expect(content["info"]["title"]).to eq("Test API")
       expect(content["paths"]["/health"]["get"]["summary"]).to eq("Health check")
@@ -63,7 +63,7 @@ RSpec.describe OpenapiRails::Generator::SpecWriter do
       klass = Class.new
       stub_const("Schemas::TestModel", klass)
       klass.include OpenapiRails::Components::Base
-      klass.schema(type: :object, properties: { id: { type: :integer } })
+      klass.schema(type: :object, properties: {id: {type: :integer}})
 
       ctx = OpenapiRails::DSL::Context.new("/test", spec_name: :public_api)
       ctx.get { response(200, "OK") }
@@ -72,7 +72,7 @@ RSpec.describe OpenapiRails::Generator::SpecWriter do
       writer = described_class.new(:public_api, OpenapiRails.configuration.specs[:public_api])
       path = writer.write!
 
-      content = YAML.safe_load(File.read(path))
+      content = YAML.safe_load_file(path)
       expect(content["components"]["schemas"]).to have_key("TestModel")
     end
   end

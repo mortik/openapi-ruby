@@ -34,9 +34,7 @@ module OpenapiRails
       def to_openapi
         result = {}
 
-        if @path_parameters.any?
-          result["parameters"] = @path_parameters
-        end
+        result["parameters"] = @path_parameters if @path_parameters.any?
 
         @operations.each do |verb, op|
           result[verb] = op.to_openapi

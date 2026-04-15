@@ -76,11 +76,11 @@ RSpec.describe OpenapiRails::Components::Registry do
     it "raises on duplicate names in the same type" do
       create_component("DupComp")
 
-      expect {
+      expect do
         klass = Class.new
         stub_const("Other::DupComp", klass)
         klass.include OpenapiRails::Components::Base
-      }.to raise_error(OpenapiRails::DuplicateComponentError, /DupComp/)
+      end.to raise_error(OpenapiRails::DuplicateComponentError, /DupComp/)
     end
   end
 end

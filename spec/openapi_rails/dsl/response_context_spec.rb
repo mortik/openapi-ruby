@@ -8,18 +8,18 @@ RSpec.describe OpenapiRails::DSL::ResponseContext do
       ctx = described_class.new(200, "OK")
       result = ctx.to_openapi
 
-      expect(result).to eq({ "description" => "OK" })
+      expect(result).to eq({"description" => "OK"})
     end
 
     it "includes schema as JSON content" do
       ctx = described_class.new(200, "success")
-      ctx.schema(type: :object, properties: { name: { type: :string } })
+      ctx.schema(type: :object, properties: {name: {type: :string}})
 
       result = ctx.to_openapi
 
       expect(result["content"]["application/json"]["schema"]).to eq({
         "type" => "object",
-        "properties" => { "name" => { "type" => "string" } }
+        "properties" => {"name" => {"type" => "string"}}
       })
     end
 
@@ -36,12 +36,12 @@ RSpec.describe OpenapiRails::DSL::ResponseContext do
 
     it "includes headers" do
       ctx = described_class.new(200, "success")
-      ctx.header("X-Rate-Limit", schema: { type: :integer }, description: "Rate limit")
+      ctx.header("X-Rate-Limit", schema: {type: :integer}, description: "Rate limit")
 
       result = ctx.to_openapi
 
       expect(result["headers"]["X-Rate-Limit"]).to eq({
-        "schema" => { "type" => "integer" },
+        "schema" => {"type" => "integer"},
         "description" => "Rate limit"
       })
     end
@@ -49,11 +49,11 @@ RSpec.describe OpenapiRails::DSL::ResponseContext do
     it "includes examples" do
       ctx = described_class.new(200, "success")
       ctx.schema(type: :object)
-      ctx.example("application/json", value: { name: "Jane" }, name: "basic")
+      ctx.example("application/json", value: {name: "Jane"}, name: "basic")
 
       result = ctx.to_openapi
 
-      expect(result["content"]["application/json"]["examples"]["basic"]["value"]).to eq({ name: "Jane" })
+      expect(result["content"]["application/json"]["examples"]["basic"]["value"]).to eq({name: "Jane"})
     end
   end
 

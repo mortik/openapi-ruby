@@ -74,7 +74,7 @@ module OpenapiRails
         end
 
         %i[tags operationId description deprecated consumes produces security
-           parameter request_body request_body_example].each do |method|
+          parameter request_body request_body_example].each do |method|
           define_method(method) do |*args, **kwargs, &block|
             if kwargs.empty?
               @operation.send(method, *args, &block)
@@ -126,8 +126,8 @@ module OpenapiRails
           @response.header(name, attributes)
         end
 
-        def example(content_type, **kwargs)
-          @response.example(content_type, **kwargs)
+        def example(content_type, **)
+          @response.example(content_type, **)
         end
 
         def produces(*content_types)
@@ -147,29 +147,27 @@ module OpenapiRails
             body = resolve_let(:request_body)
 
             # Merge individual parameter let values
-            if operation
-              operation.parameters.each do |param|
-                name = param["name"]
-                val = resolve_let(name.to_sym)
-                next unless val
+            operation&.parameters&.each do |param|
+              name = param["name"]
+              val = resolve_let(name.to_sym)
+              next unless val
 
-                case param["in"]
-                when "query"
-                  params[name] = val
-                when "header"
-                  headers[name] = val
-                when "path"
-                  # Already handled in resolve_path
-                end
+              case param["in"]
+              when "query"
+                params[name] = val
+              when "header"
+                headers[name] = val
+              when "path"
+                # Already handled in resolve_path
               end
             end
 
             # Execute the request
-            method = operation&.verb || metadata.dig(:openapi_operation)&.verb || "get"
-            send_args = { params: body || params }
+            method = operation&.verb || metadata[:openapi_operation]&.verb || "get"
+            send_args = {params: body || params}
             send_args[:headers] = headers if headers.any?
 
-            if body && headers["Content-Type"]&.include?("json") || body.is_a?(Hash)
+            if (body && headers["Content-Type"]&.include?("json")) || body.is_a?(Hash)
               send_args[:params] = body.is_a?(String) ? body : body.to_json
               send_args[:headers] = (headers || {}).merge("Content-Type" => "application/json")
             end
@@ -215,16 +213,14 @@ module OpenapiRails
         def resolve_path(metadata)
           path_ctx = find_path_context(metadata)
           template = path_ctx&.path_template || ""
-          operation = find_operation(metadata)
+          find_operation(metadata)
 
           # Substitute {param} placeholders with let values
-          path = template.gsub(/\{(\w+)\}/) do
+          template.gsub(/\{(\w+)\}/) do
             name = ::Regexp.last_match(1)
             val = resolve_let(name.to_sym)
             val || "{#{name}}"
           end
-
-          path
         end
 
         def find_path_context(metadata)
@@ -249,7 +245,7 @@ module OpenapiRails
 
         def resolve_let(name)
           send(name)
-        rescue NoMethodError, NameError
+        rescue NameError
           nil
         end
 
@@ -279,7 +275,7 @@ module OpenapiRails
 
           config.after(:suite) do
             OpenapiRails::Generator::SpecWriter.generate_all!
-          rescue StandardError => e
+          rescue => e
             warn "[openapi_rails] Spec generation failed: #{e.message}"
           end
         end

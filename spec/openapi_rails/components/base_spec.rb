@@ -9,10 +9,10 @@ RSpec.describe OpenapiRails::Components::Base do
 
   def create_component(name, parent: nil, &block)
     klass = if parent
-              Class.new(parent)
-            else
-              Class.new
-            end
+      Class.new(parent)
+    else
+      Class.new
+    end
     stub_const(name, klass)
     klass.include(OpenapiRails::Components::Base) unless parent
     klass.class_eval(&block) if block
@@ -22,16 +22,16 @@ RSpec.describe OpenapiRails::Components::Base do
   describe ".schema" do
     it "defines a schema" do
       comp = create_component("TestSchema") do
-        schema(type: :object, properties: { name: { type: :string } })
+        schema(type: :object, properties: {name: {type: :string}})
       end
 
-      expect(comp.schema).to eq({ "type" => "object", "properties" => { "name" => { "type" => "string" } } })
+      expect(comp.schema).to eq({"type" => "object", "properties" => {"name" => {"type" => "string"}}})
     end
 
     it "deep merges with existing schema" do
       comp = create_component("MergeSchema") do
-        schema(type: :object, properties: { id: { type: :integer } })
-        schema(properties: { name: { type: :string } })
+        schema(type: :object, properties: {id: {type: :integer}})
+        schema(properties: {name: {type: :string}})
       end
 
       expect(comp.schema["properties"].keys).to contain_exactly("id", "name")
@@ -41,11 +41,11 @@ RSpec.describe OpenapiRails::Components::Base do
   describe "inheritance" do
     it "inherits schema from parent" do
       parent = create_component("ParentSchema") do
-        schema(type: :object, properties: { id: { type: :integer } })
+        schema(type: :object, properties: {id: {type: :integer}})
       end
 
       child = create_component("ChildSchema", parent: parent) do
-        schema(properties: { name: { type: :string } })
+        schema(properties: {name: {type: :string}})
       end
 
       expect(child.schema["properties"].keys).to contain_exactly("id", "name")
@@ -54,11 +54,11 @@ RSpec.describe OpenapiRails::Components::Base do
 
     it "does not modify parent schema" do
       parent = create_component("ImmutableParent") do
-        schema(type: :object, properties: { id: { type: :integer } })
+        schema(type: :object, properties: {id: {type: :integer}})
       end
 
       create_component("ImmutableChild", parent: parent) do
-        schema(properties: { name: { type: :string } })
+        schema(properties: {name: {type: :string}})
       end
 
       expect(parent.schema["properties"].keys).to eq(["id"])
@@ -132,7 +132,7 @@ RSpec.describe OpenapiRails::Components::Base do
 
     it "camelizes keys by default" do
       comp = create_component("CamelSchema") do
-        schema(type: :object, properties: { first_name: { type: :string } })
+        schema(type: :object, properties: {first_name: {type: :string}})
       end
 
       openapi = comp.to_openapi
@@ -142,7 +142,7 @@ RSpec.describe OpenapiRails::Components::Base do
     it "skips key transformation when configured" do
       comp = create_component("SkipTransform") do
         skip_key_transformation true
-        schema(type: :object, properties: { first_name: { type: :string } })
+        schema(type: :object, properties: {first_name: {type: :string}})
       end
 
       openapi = comp.to_openapi
@@ -153,7 +153,7 @@ RSpec.describe OpenapiRails::Components::Base do
       OpenapiRails.configuration.camelize_keys = false
 
       comp = create_component("GlobalSkip") do
-        schema(type: :object, properties: { first_name: { type: :string } })
+        schema(type: :object, properties: {first_name: {type: :string}})
       end
 
       openapi = comp.to_openapi

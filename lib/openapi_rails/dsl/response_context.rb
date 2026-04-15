@@ -25,7 +25,7 @@ module OpenapiRails
 
       def example(content_type, value:, name: "example", summary: nil, description: nil)
         @examples[content_type] ||= {}
-        entry = { "value" => value }
+        entry = {"value" => value}
         entry["summary"] = summary if summary
         entry["description"] = description if description
         @examples[content_type][name.to_s] = entry
@@ -36,13 +36,13 @@ module OpenapiRails
       end
 
       def to_openapi
-        result = { "description" => @description }
+        result = {"description" => @description}
 
         if @schema_definition
           types = @content_types || ["application/json"]
           result["content"] = {}
           types.each do |ct|
-            media = { "schema" => @schema_definition }
+            media = {"schema" => @schema_definition}
             media["examples"] = @examples[ct] if @examples.key?(ct)
             result["content"][ct] = media
           end

@@ -4,7 +4,7 @@ module OpenapiRails
   module DSL
     class OperationContext
       attr_reader :verb, :summary, :parameters, :responses, :request_body_definition,
-                  :request_examples, :metadata
+        :request_examples, :metadata
 
       def initialize(verb, summary = nil)
         @verb = verb.to_s
@@ -59,7 +59,7 @@ module OpenapiRails
       end
 
       def request_body_example(value:, name: "example", summary: nil)
-        entry = { "value" => value, "name" => name.to_s }
+        entry = {"value" => value, "name" => name.to_s}
         entry["summary"] = summary if summary
         @request_examples << entry
       end
@@ -80,9 +80,7 @@ module OpenapiRails
         result["parameters"] = @parameters if @parameters.any?
         result["security"] = @security_list if @security_list
 
-        if @request_body_definition
-          result["requestBody"] = build_request_body
-        end
+        result["requestBody"] = build_request_body if @request_body_definition
 
         result["responses"] = {}
         @responses.each do |code, ctx|
@@ -101,7 +99,7 @@ module OpenapiRails
           rb["content"].each_value do |media_type|
             media_type["examples"] ||= {}
             @request_examples.each do |ex|
-              entry = { "value" => ex["value"] }
+              entry = {"value" => ex["value"]}
               entry["summary"] = ex["summary"] if ex["summary"]
               media_type["examples"][ex["name"]] = entry
             end

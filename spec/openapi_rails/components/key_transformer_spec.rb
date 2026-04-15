@@ -23,28 +23,28 @@ RSpec.describe OpenapiRails::Components::KeyTransformer do
 
   describe ".camelize_keys" do
     it "transforms hash keys" do
-      input = { "created_at" => "value", "first_name" => "Jane" }
-      expected = { "createdAt" => "value", "firstName" => "Jane" }
+      input = {"created_at" => "value", "first_name" => "Jane"}
+      expected = {"createdAt" => "value", "firstName" => "Jane"}
 
       expect(described_class.camelize_keys(input)).to eq(expected)
     end
 
     it "transforms nested hashes" do
-      input = { "user_info" => { "first_name" => "Jane" } }
-      expected = { "userInfo" => { "firstName" => "Jane" } }
+      input = {"user_info" => {"first_name" => "Jane"}}
+      expected = {"userInfo" => {"firstName" => "Jane"}}
 
       expect(described_class.camelize_keys(input)).to eq(expected)
     end
 
     it "transforms hashes inside arrays" do
-      input = { "items" => [{ "created_at" => "now" }] }
-      expected = { "items" => [{ "createdAt" => "now" }] }
+      input = {"items" => [{"created_at" => "now"}]}
+      expected = {"items" => [{"createdAt" => "now"}]}
 
       expect(described_class.camelize_keys(input)).to eq(expected)
     end
 
     it "preserves $ref keys" do
-      input = { "$ref" => "#/components/schemas/User" }
+      input = {"$ref" => "#/components/schemas/User"}
 
       expect(described_class.camelize_keys(input)).to eq(input)
     end

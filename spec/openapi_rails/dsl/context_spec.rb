@@ -28,7 +28,7 @@ RSpec.describe OpenapiRails::DSL::Context do
 
     it "includes path-level parameters" do
       ctx = described_class.new("/users/{id}")
-      ctx.parameter(name: :id, in: :path, schema: { type: :integer })
+      ctx.parameter(name: :id, in: :path, schema: {type: :integer})
       ctx.get("Get user") { response(200, "OK") }
 
       result = ctx.to_openapi
@@ -40,7 +40,7 @@ RSpec.describe OpenapiRails::DSL::Context do
 
     it "copies path parameters to operations" do
       ctx = described_class.new("/users/{id}")
-      ctx.parameter(name: :id, in: :path, schema: { type: :integer })
+      ctx.parameter(name: :id, in: :path, schema: {type: :integer})
       ctx.get("Get user") { response(200, "OK") }
 
       op_params = ctx.to_openapi["get"]["parameters"]

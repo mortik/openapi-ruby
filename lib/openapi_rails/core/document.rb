@@ -53,8 +53,8 @@ module OpenapiRails
       def validate
         schemer = JSONSchemer.openapi(@data)
         schemer.validate.to_a
-      rescue StandardError => e
-        [{ "error" => e.message }]
+      rescue => e
+        [{"error" => e.message}]
       end
 
       private

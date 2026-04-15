@@ -46,7 +46,7 @@ RSpec.describe OpenapiRails::DSL::OperationContext do
 
     it "includes parameters" do
       op = described_class.new(:get)
-      op.parameter(name: :page, in: :query, schema: { type: :integer })
+      op.parameter(name: :page, in: :query, schema: {type: :integer})
 
       params = op.to_openapi["parameters"]
 
@@ -57,7 +57,7 @@ RSpec.describe OpenapiRails::DSL::OperationContext do
 
     it "auto-requires path parameters" do
       op = described_class.new(:get)
-      op.parameter(name: :id, in: :path, schema: { type: :integer })
+      op.parameter(name: :id, in: :path, schema: {type: :integer})
 
       params = op.to_openapi["parameters"]
 
@@ -70,23 +70,23 @@ RSpec.describe OpenapiRails::DSL::OperationContext do
         required: true,
         content: {
           "application/json" => {
-            schema: { "$ref" => "#/components/schemas/UserInput" }
+            schema: {"$ref" => "#/components/schemas/UserInput"}
           }
         }
       )
 
       result = op.to_openapi
 
-      expect(result["requestBody"]["required"]).to eq(true)
+      expect(result["requestBody"]["required"]).to be(true)
       expect(result["requestBody"]["content"]["application/json"]["schema"]["$ref"])
         .to eq("#/components/schemas/UserInput")
     end
 
     it "includes security" do
       op = described_class.new(:get)
-      op.security([{ bearerAuth: [] }])
+      op.security([{bearerAuth: []}])
 
-      expect(op.to_openapi["security"]).to eq([{ "bearerAuth" => [] }])
+      expect(op.to_openapi["security"]).to eq([{"bearerAuth" => []}])
     end
 
     it "includes request body examples" do
@@ -95,16 +95,16 @@ RSpec.describe OpenapiRails::DSL::OperationContext do
         required: true,
         content: {
           "application/json" => {
-            schema: { type: :object }
+            schema: {type: :object}
           }
         }
       )
-      op.request_body_example(value: { name: "Jane" }, name: "basic", summary: "Basic example")
+      op.request_body_example(value: {name: "Jane"}, name: "basic", summary: "Basic example")
 
       result = op.to_openapi
       examples = result["requestBody"]["content"]["application/json"]["examples"]
 
-      expect(examples["basic"]["value"]).to eq({ name: "Jane" })
+      expect(examples["basic"]["value"]).to eq({name: "Jane"})
       expect(examples["basic"]["summary"]).to eq("Basic example")
     end
   end

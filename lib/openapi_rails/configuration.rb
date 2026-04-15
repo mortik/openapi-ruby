@@ -8,30 +8,20 @@ module OpenapiRails
 
     # Components
     attr_accessor :component_paths
-    attr_accessor :camelize_keys
-    attr_accessor :key_transform
+    attr_accessor :camelize_keys, :key_transform, :response_validation, :strict_mode, :strict_query_params,
+      :coerce_params, :error_handler, :spec_output_format, :validate_responses_in_tests, :ui_path, :ui_config, :coverage_report_path
 
     # Middleware (runtime validation)
     attr_accessor :request_validation
-    attr_accessor :response_validation
-    attr_accessor :strict_mode
-    attr_accessor :strict_query_params
-    attr_accessor :coerce_params
-    attr_accessor :error_handler
 
     # Test / Generation
     attr_accessor :spec_output_dir
-    attr_accessor :spec_output_format
-    attr_accessor :validate_responses_in_tests
 
     # UI (optional)
     attr_accessor :ui_enabled
-    attr_accessor :ui_path
-    attr_accessor :ui_config
 
     # Coverage
     attr_accessor :coverage_enabled
-    attr_accessor :coverage_report_path
 
     def initialize
       @specs = {}
@@ -63,9 +53,9 @@ module OpenapiRails
         raise ConfigurationError, "response_validation must be :disabled, :enabled, or :warn_only"
       end
 
-      unless %i[yaml json].include?(@spec_output_format)
-        raise ConfigurationError, "spec_output_format must be :yaml or :json"
-      end
+      return if %i[yaml json].include?(@spec_output_format)
+
+      raise ConfigurationError, "spec_output_format must be :yaml or :json"
     end
   end
 end

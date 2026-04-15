@@ -10,7 +10,7 @@ module OpenapiRails
       end
 
       def ref_object(component_type, name)
-        { "$ref" => ref_path(component_type, name) }
+        {"$ref" => ref_path(component_type, name)}
       end
 
       def ref?(value)

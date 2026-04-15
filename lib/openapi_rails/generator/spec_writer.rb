@@ -52,7 +52,7 @@ module OpenapiRails
       end
 
       def filename
-        ext = OpenapiRails.configuration.spec_output_format == :json ? "json" : "yaml"
+        ext = (OpenapiRails.configuration.spec_output_format == :json) ? "json" : "yaml"
         "#{@spec_name}.#{ext}"
       end
 

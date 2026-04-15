@@ -60,7 +60,7 @@ module OpenapiRails
       def component_files
         @paths.flat_map do |path|
           expanded = File.expand_path(path)
-          Dir[File.join(expanded, "**", "*.rb")].sort
+          Dir[File.join(expanded, "**", "*.rb")]
         end
       end
 

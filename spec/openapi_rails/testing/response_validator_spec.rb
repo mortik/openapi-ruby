@@ -6,11 +6,11 @@ RSpec.describe OpenapiRails::Testing::ResponseValidator do
   describe "#validate" do
     it "returns no errors for matching status and schema" do
       response_ctx = OpenapiRails::DSL::ResponseContext.new(200, "OK")
-      response_ctx.schema(type: "object", properties: { name: { type: "string" } })
+      response_ctx.schema(type: "object", properties: {name: {type: "string"}})
 
       validator = described_class.new
       errors = validator.validate(
-        response_body: { "name" => "Jane" },
+        response_body: {"name" => "Jane"},
         status_code: 200,
         response_context: response_ctx
       )
@@ -33,11 +33,11 @@ RSpec.describe OpenapiRails::Testing::ResponseValidator do
 
     it "returns schema errors for invalid body" do
       response_ctx = OpenapiRails::DSL::ResponseContext.new(200, "OK")
-      response_ctx.schema(type: "object", required: ["name"], properties: { name: { type: "string" } })
+      response_ctx.schema(type: "object", required: ["name"], properties: {name: {type: "string"}})
 
       validator = described_class.new
       errors = validator.validate(
-        response_body: { "age" => 30 },
+        response_body: {"age" => 30},
         status_code: 200,
         response_context: response_ctx
       )

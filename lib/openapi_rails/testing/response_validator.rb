@@ -14,9 +14,7 @@ module OpenapiRails
         # Validate status code
         expected = response_context.status_code.to_s
         actual = status_code.to_s
-        if actual != expected
-          errors << "Expected status #{expected}, got #{actual}"
-        end
+        errors << "Expected status #{expected}, got #{actual}" if actual != expected
 
         # Validate response body against schema
         if response_context.schema_definition && response_body
@@ -57,7 +55,7 @@ module OpenapiRails
           begin
             result = schemer.validate_data(data, schema)
             return result.map { |e| format_error(e) }
-          rescue StandardError
+          rescue
             # Fall through to standalone validation
           end
         end
@@ -67,7 +65,7 @@ module OpenapiRails
           s = JSONSchemer.schema(schema)
           result = s.validate(data).to_a
           result.map { |e| format_error(e) }
-        rescue StandardError => e
+        rescue => e
           [e.message]
         end
       end

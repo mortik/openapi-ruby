@@ -11,17 +11,17 @@ RSpec.describe OpenapiRails::Core::RefResolver do
 
   describe ".ref_object" do
     it "builds a $ref hash" do
-      expect(described_class.ref_object(:schemas, "User")).to eq({ "$ref" => "#/components/schemas/User" })
+      expect(described_class.ref_object(:schemas, "User")).to eq({"$ref" => "#/components/schemas/User"})
     end
   end
 
   describe ".ref?" do
     it "returns true for $ref hashes" do
-      expect(described_class.ref?({ "$ref" => "#/components/schemas/User" })).to be true
+      expect(described_class.ref?({"$ref" => "#/components/schemas/User"})).to be true
     end
 
     it "returns false for regular hashes" do
-      expect(described_class.ref?({ "type" => "object" })).to be false
+      expect(described_class.ref?({"type" => "object"})).to be false
     end
 
     it "returns false for non-hashes" do
@@ -34,14 +34,14 @@ RSpec.describe OpenapiRails::Core::RefResolver do
       document = {
         "components" => {
           "schemas" => {
-            "User" => { "type" => "object" }
+            "User" => {"type" => "object"}
           }
         }
       }
 
       result = described_class.resolve("#/components/schemas/User", document)
 
-      expect(result).to eq({ "type" => "object" })
+      expect(result).to eq({"type" => "object"})
     end
 
     it "returns nil for unresolvable paths" do
