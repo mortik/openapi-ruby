@@ -51,7 +51,6 @@ module OpenapiRails
         # If schema is a $ref within a document, use the document-aware schemer
         if @document_hash
           schemer = JSONSchemer.openapi(@document_hash)
-          # Build a temporary schema that references the document
           begin
             result = schemer.validate_data(data, schema)
             return result.map { |e| format_error(e) }
@@ -60,6 +59,9 @@ module OpenapiRails
           end
         end
 
+        # Schemas containing $ref cannot be validated without a full document
+        return [] if contains_ref?(schema)
+
         # Standalone schema validation
         begin
           s = JSONSchemer.schema(schema)
@@ -67,6 +69,19 @@ module OpenapiRails
           result.map { |e| format_error(e) }
         rescue => e
           [e.message]
+        end
+      end
+
+      def contains_ref?(value)
+        case value
+        when Hash
+          return true if value.key?("$ref")
+
+          value.values.any? { |v| contains_ref?(v) }
+        when Array
+          value.any? { |v| contains_ref?(v) }
+        else
+          false
         end
       end
 

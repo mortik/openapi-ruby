@@ -1,14 +1,10 @@
 # frozen_string_literal: true
 
-require "rails"
-require "rails/generators"
-require "action_controller/railtie"
+# Load the dummy Rails app for specs that need Rails (generators, engine, integration)
+ENV["RAILS_ENV"] ||= "test"
+require_relative "../dummy/config/environment"
 
-# Minimal Rails application for testing
-class TestApp < Rails::Application
-  config.eager_load = false
-  config.hosts.clear
-  config.secret_key_base = "test_secret_key_base_for_openapi_rails"
-end
-
-TestApp.initialize!
+# Set up the in-memory database
+ActiveRecord::Schema.verbose = false
+ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
+load File.expand_path("../dummy/db/schema.rb", __dir__)

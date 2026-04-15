@@ -2,6 +2,7 @@
 
 require "spec_helper"
 require_relative "../support/rails_app"
+require "rails/generators"
 require "generators/openapi_rails/install/install_generator"
 require "tmpdir"
 require "securerandom"

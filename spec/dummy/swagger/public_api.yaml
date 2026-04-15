@@ -1,0 +1,295 @@
+---
+openapi: 3.1.0
+info:
+  title: Dummy API
+  version: 1.0.0
+servers:
+  - url: "/"
+paths:
+  /api/v1/users:
+    get:
+      summary: List users
+      operationId: listUsers
+      tags:
+        - Users
+      responses:
+        "200":
+          description: returns all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      summary: Create a user
+      operationId: createUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: user created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "422":
+          description: validation errors
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrors"
+  /api/v1/users/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Get a user
+      operationId: getUser
+      tags:
+        - Users
+      responses:
+        "200":
+          description: user found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: user not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      summary: Update a user
+      operationId: updateUser
+      tags:
+        - Users
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "200":
+          description: user updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: user not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: Delete a user
+      operationId: deleteUser
+      tags:
+        - Users
+      responses:
+        "204":
+          description: user deleted
+        "404":
+          description: user not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/posts:
+    get:
+      summary: List posts
+      operationId: listPosts
+      tags:
+        - Posts
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: returns posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+    post:
+      summary: Create a post
+      operationId: createPost
+      tags:
+        - Posts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "201":
+          description: post created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "422":
+          description: validation errors
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrors"
+  /api/v1/posts/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Get a post
+      operationId: getPost
+      tags:
+        - Posts
+      responses:
+        "200":
+          description: post found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "404":
+          description: post not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: Delete a post
+      operationId: deletePost
+      tags:
+        - Posts
+      responses:
+        "204":
+          description: post deleted
+        "404":
+          description: post not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - email
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+        updatedAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+      title: User
+    UserInput:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          minLength: 1
+      title: UserInput
+    Post:
+      type: object
+      required:
+        - id
+        - title
+        - user_id
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        body:
+          type:
+            - string
+            - "null"
+        user_id:
+          type: integer
+        createdAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+        updatedAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+      title: Post
+    PostInput:
+      type: object
+      required:
+        - title
+        - user_id
+      properties:
+        title:
+          type: string
+          minLength: 1
+        body:
+          type:
+            - string
+            - "null"
+        user_id:
+          type: integer
+      title: PostInput
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+      title: ErrorResponse
+    ValidationErrors:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            type: string
+      title: ValidationErrors

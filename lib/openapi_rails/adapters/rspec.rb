@@ -86,9 +86,10 @@ module OpenapiRails
 
         def response(status_code, description, &block)
           response_ctx = @operation.response(status_code, description)
+          operation = @operation
 
           @example_group.context "response #{status_code} #{description}" do
-            metadata[:openapi_operation] = operation_context_from_parent
+            metadata[:openapi_operation] = operation
             metadata[:openapi_response] = response_ctx
 
             # Evaluate response-level DSL
@@ -136,10 +137,12 @@ module OpenapiRails
 
         def run_test!(description = nil, &block)
           response_ctx = @response
-          @example_group.it(description || "returns #{response_ctx.status_code}") do
+          @example_group.it(description || "returns #{response_ctx.status_code}") do |example|
+            example_metadata = example.metadata
+
             # Resolve path parameters from let variables
-            path = resolve_path(metadata)
-            operation = find_operation(metadata)
+            path = resolve_path(example_metadata)
+            operation = find_operation(example_metadata)
 
             # Build params and headers from let variables
             params = resolve_let(:request_params) || {}
@@ -163,7 +166,7 @@ module OpenapiRails
             end
 
             # Execute the request
-            method = operation&.verb || metadata[:openapi_operation]&.verb || "get"
+            method = operation&.verb || example_metadata[:openapi_operation]&.verb || "get"
             send_args = {params: body || params}
             send_args[:headers] = headers if headers.any?
 
@@ -272,6 +275,11 @@ module OpenapiRails
         ::RSpec.configure do |config|
           config.extend ExampleGroupHelpers, type: :openapi
           config.include ExampleHelpers, type: :openapi
+
+          # Make type: :openapi behave like request specs (includes integration test methods)
+          if defined?(::RSpec::Rails)
+            config.include ::RSpec::Rails::RequestExampleGroup, type: :openapi
+          end
 
           config.after(:suite) do
             OpenapiRails::Generator::SpecWriter.generate_all!

@@ -1,0 +1,18 @@
+# frozen_string_literal: true
+
+OpenapiRails.configure do |config|
+  config.specs = {
+    public_api: {
+      info: {title: "Dummy API", version: "1.0.0"},
+      servers: [{url: "/"}]
+    }
+  }
+
+  config.component_paths = [Rails.root.join("app/api_components").to_s]
+  config.camelize_keys = false
+  # Use tmp dir for generated output so we don't overwrite the hand-maintained swagger/public_api.yaml
+  config.spec_output_dir = Rails.root.join("tmp/swagger").to_s
+  config.spec_output_format = :yaml
+  config.validate_responses_in_tests = true
+  config.ui_enabled = false
+end

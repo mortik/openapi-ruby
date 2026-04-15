@@ -26,8 +26,8 @@ module OpenapiRails
           end
         end
 
-        def test_response(method, expected_status, params: {}, headers: {}, body: nil, path_params: {}, &block)
-          context = find_context_for_method(method)
+        def assert_api_response(method, expected_status, params: {}, headers: {}, body: nil, path_params: {}, &block)
+          context = find_context_for(method, path_params)
           raise OpenapiRails::Error, "No api_path defined for #{method.upcase} in #{self.class}" unless context
 
           operation = context.operations[method.to_s]
@@ -80,8 +80,20 @@ module OpenapiRails
 
         private
 
-        def find_context_for_method(method)
-          self.class._openapi_contexts.find { |ctx| ctx.operations.key?(method.to_s) }
+        def find_context_for(method, path_params)
+          has_path_params = path_params.any?
+
+          self.class._openapi_contexts.find do |ctx|
+            next false unless ctx.operations.key?(method.to_s)
+
+            if has_path_params
+              # Pick the context that has path parameter placeholders
+              ctx.path_template.include?("{")
+            else
+              # Pick the context without path parameter placeholders
+              !ctx.path_template.include?("{")
+            end
+          end
         end
 
         def expand_path(template, params)

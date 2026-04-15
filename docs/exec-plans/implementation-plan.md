@@ -649,7 +649,16 @@ Creates:
 - Route mounting
 - Optional `UI::Engine` + UI controller (Swagger UI via CDN, vendorable)
 
-### Phase 6: Polish
+### Phase 6: Integration Testing
+- Dummy Rails app (`spec/dummy`) with a simple API controller (e.g. UsersController with CRUD)
+- Schema components for the dummy app (User, UserInput, Error)
+- RSpec integration specs exercising the full DSL (`path`/`get`/`response`/`run_test!`) against real requests
+- End-to-end spec generation: run tests -> generate OpenAPI file -> validate it with json_schemer
+- Middleware integration: test request/response validation in a live Rack stack
+- Specs controller integration: verify serving generated OpenAPI files
+- Minitest integration test proving the adapter works with real requests
+
+### Phase 7: Polish
 - Migration guide from rswag
 - Performance: schema caching, lazy component loading
 - README + API documentation

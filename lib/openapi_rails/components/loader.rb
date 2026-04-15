@@ -11,6 +11,7 @@ module OpenapiRails
       end
 
       def load!
+        define_namespace_modules!
         component_files.each { |f| require f }
         self
       end
@@ -56,6 +57,18 @@ module OpenapiRails
       end
 
       private
+
+      def define_namespace_modules!
+        @paths.each do |path|
+          expanded = File.expand_path(path)
+          next unless Dir.exist?(expanded)
+
+          Dir.children(expanded).select { |f| File.directory?(File.join(expanded, f)) }.each do |dir|
+            mod_name = dir.camelize.to_sym
+            Object.const_set(mod_name, Module.new) unless Object.const_defined?(mod_name)
+          end
+        end
+      end
 
       def component_files
         @paths.flat_map do |path|

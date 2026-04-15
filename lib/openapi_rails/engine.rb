@@ -32,7 +32,15 @@ module OpenapiRails
       config = OpenapiRails.configuration
       config.component_paths.each do |path|
         expanded = Rails.root.join(path)
-        Dir[expanded.join("**", "*.rb")].sort.each { |f| require f } if expanded.exist?
+        next unless expanded.exist?
+
+        # Auto-define modules for subdirectories (Schemas, Parameters, etc.)
+        expanded.children.select(&:directory?).each do |dir|
+          mod_name = dir.basename.to_s.camelize.to_sym
+          Object.const_set(mod_name, Module.new) unless Object.const_defined?(mod_name)
+        end
+
+        Dir[expanded.join("**", "*.rb")].sort.each { |f| require f }
       end
     end
 
