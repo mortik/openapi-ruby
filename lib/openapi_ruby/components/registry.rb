@@ -65,8 +65,9 @@ module OpenapiRuby
           existing_scopes = existing._component_scopes
           existing_scopes_set = existing._component_scopes_explicitly_set
 
-          # Skip when exactly one side has explicitly configured scopes — the other
-          # is still at its default (freshly included) and may get scopes set later via
+          # Skip when exactly one side has explicitly configured scopes — during initial
+          # loading, components are registered with empty default scopes before the Loader
+          # assigns inferred scopes. The unconfigured side may get scopes later via
           # component_scopes, which unregisters/re-registers and retriggers this check.
           next if new_scopes_set != existing_scopes_set
 
