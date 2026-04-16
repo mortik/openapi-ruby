@@ -3,6 +3,7 @@
     ".": {
       "release-type": "ruby",
       "package-name": "openapi-ruby",
+      "include-component-in-tag": false,
       "version-file": "lib/openapi_ruby/version.rb",
       "changelog-path": "CHANGELOG.md"
     }
