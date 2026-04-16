@@ -1,3 +1,3 @@
 # frozen_string_literal: true
 
-require "openapi_rails/rspec"
+require "openapi_ruby/rspec"

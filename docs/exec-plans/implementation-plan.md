@@ -1,10 +1,10 @@
-# openapi_rails — Implementation Plan
+# openapi_ruby — Implementation Plan
 
 ## Context
 
 **Problem:** rswag is under-maintained ("Seeking maintainers!"), tightly coupled to RSpec, stuck on OpenAPI 3.0 (no 3.1), uses the outdated `json-schema` gem (Draft 4 only), and lacks runtime request/response validation. Users wanting reusable schema components must bolt on `rswag-schema-components`. Users wanting middleware validation must use `committee` separately with a completely different workflow.
 
-**Goal:** Build `openapi_rails` — a single gem that unifies all three projects' capabilities: test-driven OpenAPI spec generation (rswag), reusable schema components as Ruby classes (rswag-schema-components), and runtime request/response validation middleware (committee). It must be test-framework agnostic (RSpec + Minitest), support OpenAPI 3.1, and use modern JSON Schema validation.
+**Goal:** Build `openapi_ruby` — a single gem that unifies all three projects' capabilities: test-driven OpenAPI spec generation (rswag), reusable schema components as Ruby classes (rswag-schema-components), and runtime request/response validation middleware (committee). It must be test-framework agnostic (RSpec + Minitest), support OpenAPI 3.1, and use modern JSON Schema validation.
 
 ---
 
@@ -13,15 +13,15 @@
 **Single gem, not sub-gems.** Rswag's sub-gem approach causes version-skew bugs and confusing installs. Instead: one gem with optional requires so users load only what they need.
 
 ```
-openapi_rails/
-├── openapi_rails.gemspec
+openapi_ruby/
+├── openapi_ruby.gemspec
 ├── Gemfile
 ├── Rakefile
 ├── LICENSE
 ├── README.md
 ├── lib/
-│   ├── openapi_rails.rb                        # Root: config, autoloads
-│   ├── openapi_rails/
+│   ├── openapi_ruby.rb                        # Root: config, autoloads
+│   ├── openapi_ruby/
 │   │   ├── version.rb
 │   │   ├── configuration.rb
 │   │   ├── errors.rb
@@ -84,7 +84,7 @@ openapi_rails/
 │   │   ├── engine.rb                           # Main Rails engine
 │   │   └── railtie.rb
 │   │
-│   └── generators/openapi_rails/
+│   └── generators/openapi_ruby/
 │       ├── install/
 │       │   ├── install_generator.rb
 │       │   └── templates/
@@ -96,7 +96,7 @@ openapi_rails/
 │               └── component.rb.tt
 │
 ├── app/
-│   └── controllers/openapi_rails/
+│   └── controllers/openapi_ruby/
 │       ├── schemas_controller.rb                 # Serves OA spec as JSON/YAML
 │       └── ui_controller.rb                    # Serves Swagger UI HTML
 │
@@ -112,7 +112,7 @@ openapi_rails/
 ## 2. Dependencies
 
 ```ruby
-# openapi_rails.gemspec
+# openapi_ruby.gemspec
 s.add_dependency 'json_schemer', '~> 2.4'     # JSON Schema 2020-12 + OA 3.1
 s.add_dependency 'rack', '>= 2.0'
 s.add_dependency 'railties', '>= 7.0'
@@ -134,7 +134,7 @@ s.add_development_dependency 'rubocop'
 ## 3. Configuration System
 
 ```ruby
-OpenapiRails.configure do |config|
+OpenapiRuby.configure do |config|
   # Spec definitions (supports multiple: public, admin, internal)
   config.schemas = {
     public_api: {
@@ -195,7 +195,7 @@ The DSL core is pure Ruby with zero framework dependencies. Thin adapter layers 
 ### Adapter Interface (abstract)
 
 ```ruby
-module OpenapiRails::Adapters::Base
+module OpenapiRuby::Adapters::Base
   def install!              # Register DSL with the framework
   def resolve_params        # Read test params (let blocks / instance vars)
   def execute_request(...)  # Dispatch HTTP request
@@ -206,7 +206,7 @@ end
 
 ### RSpec Adapter — registers via `RSpec.configure`, uses `describe`/`it`/`let`, generates test cases from DSL blocks, runs spec generation in `after(:suite)`.
 
-### Minitest Adapter — provides `include OpenapiRails::Minitest::DSL` mixin, uses `test_*` methods and instance variables, runs spec generation via `Minitest.after_run`.
+### Minitest Adapter — provides `include OpenapiRuby::Minitest::DSL` mixin, uses `test_*` methods and instance variables, runs spec generation via `Minitest.after_run`.
 
 ---
 
@@ -216,7 +216,7 @@ end
 
 ```ruby
 # spec/requests/users_spec.rb
-require 'openapi_rails/rspec'
+require 'openapi_ruby/rspec'
 
 RSpec.describe 'Users API', type: :openapi do
   path '/api/v1/users' do
@@ -288,10 +288,10 @@ end
 
 ```ruby
 # test/integration/users_test.rb
-require 'openapi_rails/minitest'
+require 'openapi_ruby/minitest'
 
 class UsersApiTest < ActionDispatch::IntegrationTest
-  include OpenapiRails::Minitest::DSL
+  include OpenapiRuby::Minitest::DSL
 
   openapi_schema :public_api  # which spec this test contributes to
 
@@ -375,7 +375,7 @@ end
 ```ruby
 # app/api_components/schemas/base_model.rb
 class Schemas::BaseModel
-  include OpenapiRails::Components::Base
+  include OpenapiRuby::Components::Base
 
   schema(
     type: :object,
@@ -401,7 +401,7 @@ end
 
 # app/api_components/schemas/user_input.rb
 class Schemas::UserInput
-  include OpenapiRails::Components::Base
+  include OpenapiRuby::Components::Base
 
   schema(
     type: :object,
@@ -415,7 +415,7 @@ end
 
 # app/api_components/security_schemes/bearer_auth.rb
 class SecuritySchemes::BearerAuth
-  include OpenapiRails::Components::Base
+  include OpenapiRuby::Components::Base
   component_type :security_schemes
 
   schema(
@@ -438,11 +438,11 @@ end
 
 ### Controller Helpers
 
-Include `OpenapiRails::ControllerHelpers` in your controllers to use schema components for strong params:
+Include `OpenapiRuby::ControllerHelpers` in your controllers to use schema components for strong params:
 
 ```ruby
 class Api::V1::UsersController < ActionController::API
-  include OpenapiRails::ControllerHelpers
+  include OpenapiRuby::ControllerHelpers
 
   def create
     user = User.new(openapi_permit(Schemas::UserInput))
@@ -471,8 +471,8 @@ end
 ```ruby
 # Rack middleware — validates incoming requests against the OpenAPI spec
 
-# config/initializers/openapi_rails.rb
-OpenapiRails.configure do |config|
+# config/initializers/openapi_ruby.rb
+OpenapiRuby.configure do |config|
   config.request_validation = :enabled       # or :warn_only, :disabled
   config.strict_mode = true                  # 404 for undocumented paths
   config.strict_query_params = true          # reject unknown query params
@@ -514,10 +514,10 @@ For users who prefer schema-first (write the spec, then validate against it):
 
 ```ruby
 # RSpec
-require 'openapi_rails/rspec'
+require 'openapi_ruby/rspec'
 
 RSpec.describe 'Users API', type: :request do
-  include OpenapiRails::Testing::Assertions
+  include OpenapiRuby::Testing::Assertions
 
   it 'conforms to schema' do
     get '/api/v1/users', params: { page: 1 }
@@ -534,7 +534,7 @@ end
 
 # Minitest
 class UsersApiTest < ActionDispatch::IntegrationTest
-  include OpenapiRails::Testing::Assertions
+  include OpenapiRuby::Testing::Assertions
 
   test 'conforms to schema' do
     get '/api/v1/users', params: { page: 1 }
@@ -546,7 +546,7 @@ end
 ### Schema Coverage
 
 ```ruby
-OpenapiRails.configure do |config|
+OpenapiRuby.configure do |config|
   config.coverage_enabled = true
   config.coverage_report_path = 'tmp/openapi_coverage.json'
 end
@@ -582,7 +582,7 @@ Tests (DSL) + Components (Ruby classes)
      spec.yaml   spec.json
 ```
 
-**Rake task:** `rake openapi_rails:generate`
+**Rake task:** `rake openapi_ruby:generate`
 - Loads test files to populate MetadataStore (without executing tests)
 - Merges with components
 - Validates generated document against OA 3.1 meta-schema via `json_schemer`
@@ -602,7 +602,7 @@ Swagger UI is entirely optional. The gem serves OpenAPI spec files regardless; U
 
 ```ruby
 # config/routes.rb
-mount OpenapiRails::Engine => '/api-docs'
+mount OpenapiRuby::Engine => '/api-docs'
 ```
 
 - Serves spec files at `/api-docs/public_api.yaml` (or .json) — always available
@@ -611,20 +611,20 @@ mount OpenapiRails::Engine => '/api-docs'
 - No hard dependency on swagger-ui-dist — users who don't enable UI pay no cost
 - Supports `openapi_filter` proc to modify spec per-request (e.g., hide admin endpoints from public docs)
 - Optional basic auth via configuration
-- Custom UI template override via `app/views/openapi_rails/ui/index.html.erb`
+- Custom UI template override via `app/views/openapi_ruby/ui/index.html.erb`
 
 ---
 
 ## 11. Rails Generators
 
-### `rails generate openapi_rails:install`
+### `rails generate openapi_ruby:install`
 Creates:
-- `config/initializers/openapi_rails.rb` (configuration)
+- `config/initializers/openapi_ruby.rb` (configuration)
 - `spec/openapi_helper.rb` or `test/openapi_helper.rb` (test helper)
 - `app/api_components/schemas/.keep`
 - Adds engine mount to `config/routes.rb`
 
-### `rails generate openapi_rails:component User schemas`
+### `rails generate openapi_ruby:component User schemas`
 Creates:
 - `app/api_components/schemas/user.rb` with boilerplate
 
@@ -634,7 +634,7 @@ Creates:
 
 ### Phase 1: Foundation
 - Gem skeleton (gemspec, Gemfile, Rakefile, .rubocop.yml, .github CI)
-- `OpenapiRails` module, `Configuration`, `Errors`, `Version`
+- `OpenapiRuby` module, `Configuration`, `Errors`, `Version`
 - `Core::Document`, `Core::DocumentBuilder` — in-memory OA 3.1 model
 - `Components::Base`, `Components::Loader`, `Components::Registry`, `Components::KeyTransformer`
 - `json_schemer` integration for schema validation
@@ -646,7 +646,7 @@ Creates:
 - `Adapters::RSpec` — full integration (describe/it generation, let-based params, after-suite hook)
 - `Testing::RequestBuilder`, `Testing::ResponseValidator`
 - `Generator::SchemaWriter`, JSON/YAML formatters
-- Rake task `openapi_rails:generate`
+- Rake task `openapi_ruby:generate`
 - Integration tests with a dummy Rails app + RSpec
 
 ### Phase 3: Minitest Adapter

@@ -3,12 +3,12 @@
 require "spec_helper"
 require_relative "../support/rails_app"
 require "rails/generators"
-require "generators/openapi_rails/component/component_generator"
+require "generators/openapi_ruby/component/component_generator"
 require "tmpdir"
 require "securerandom"
 
-RSpec.describe OpenapiRails::Generators::ComponentGenerator do
-  let(:destination) { File.join(Dir.tmpdir, "openapi_rails_gen_#{SecureRandom.hex(4)}") }
+RSpec.describe OpenapiRuby::Generators::ComponentGenerator do
+  let(:destination) { File.join(Dir.tmpdir, "openapi_ruby_gen_#{SecureRandom.hex(4)}") }
 
   before { FileUtils.mkdir_p(destination) }
   after { FileUtils.rm_rf(destination) }
@@ -24,7 +24,7 @@ RSpec.describe OpenapiRails::Generators::ComponentGenerator do
       expect(File.exist?(path)).to be true
       content = File.read(path)
       expect(content).to include("class Schemas::User")
-      expect(content).to include("include OpenapiRails::Components::Base")
+      expect(content).to include("include OpenapiRuby::Components::Base")
       expect(content).not_to include("component_type")
     end
   end

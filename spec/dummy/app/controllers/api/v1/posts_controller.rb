@@ -3,7 +3,7 @@
 module Api
   module V1
     class PostsController < ActionController::API
-      include OpenapiRails::ControllerHelpers
+      include OpenapiRuby::ControllerHelpers
 
       def index
         posts = if params[:user_id]

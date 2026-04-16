@@ -4,7 +4,7 @@ ENV["RAILS_ENV"] = "test"
 
 require_relative "../config/environment"
 require "minitest/autorun"
-require "openapi_rails/minitest"
+require "openapi_ruby/minitest"
 
 # Set up in-memory database
 ActiveRecord::Schema.verbose = false

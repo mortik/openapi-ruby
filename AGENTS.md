@@ -1,4 +1,4 @@
-# openapi_rails
+# openapi_ruby
 
 ## Project Overview
 
@@ -16,9 +16,9 @@ bundle exec standardrb     # lint
 
 Single gem with modular requires:
 
-- `lib/openapi_rails/` — core library
-- `lib/openapi_rails/rspec.rb` — require this for RSpec integration
-- `lib/openapi_rails/minitest.rb` — require this for Minitest integration
+- `lib/openapi_ruby/` — core library
+- `lib/openapi_ruby/rspec.rb` — require this for RSpec integration
+- `lib/openapi_ruby/minitest.rb` — require this for Minitest integration
 
 Key modules:
 
@@ -32,7 +32,7 @@ Key modules:
 
 ## Testing
 
-- Unit tests in `spec/openapi_rails/`
+- Unit tests in `spec/openapi_ruby/`
 - Generator tests in `spec/generators/`
 - Integration tests in `spec/integration/` — these boot the dummy Rails app
 - Dummy app in `spec/dummy/` — reference implementation with Users (RSpec) and Posts (Minitest)

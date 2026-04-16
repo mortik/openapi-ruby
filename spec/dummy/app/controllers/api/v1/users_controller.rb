@@ -3,7 +3,7 @@
 module Api
   module V1
     class UsersController < ActionController::API
-      include OpenapiRails::ControllerHelpers
+      include OpenapiRuby::ControllerHelpers
 
       def index
         users = User.all

@@ -3,7 +3,7 @@
 require "test_helper"
 
 class PostsApiTest < ActionDispatch::IntegrationTest
-  include OpenapiRails::Adapters::Minitest::DSL
+  include OpenapiRuby::Adapters::Minitest::DSL
 
   openapi_schema :public_api
 

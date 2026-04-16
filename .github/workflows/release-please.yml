@@ -40,5 +40,5 @@ jobs:
 
       - name: Build and push gem
         run: |
-          gem build openapi_rails.gemspec
-          gem push openapi_rails-*.gem
+          gem build openapi_ruby.gemspec
+          gem push openapi-ruby-*.gem

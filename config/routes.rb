@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-OpenapiRails::Engine.routes.draw do
+OpenapiRuby::Engine.routes.draw do
   get "schemas", to: "schemas#index", as: :schemas
   get "schemas/:id", to: "schemas#show", as: :schema
 

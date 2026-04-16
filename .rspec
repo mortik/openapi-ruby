@@ -1,2 +1,2 @@
 --require spec_helper
---pattern spec/{openapi_rails,generators,integration}/**/*_spec.rb,spec/*_spec.rb
+--pattern spec/{openapi_ruby,generators,integration}/**/*_spec.rb,spec/*_spec.rb

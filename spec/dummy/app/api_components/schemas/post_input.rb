@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Schemas::PostInput
-  include OpenapiRails::Components::Base
+  include OpenapiRuby::Components::Base
 
   schema(
     type: :object,

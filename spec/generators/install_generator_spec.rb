@@ -3,12 +3,12 @@
 require "spec_helper"
 require_relative "../support/rails_app"
 require "rails/generators"
-require "generators/openapi_rails/install/install_generator"
+require "generators/openapi_ruby/install/install_generator"
 require "tmpdir"
 require "securerandom"
 
-RSpec.describe OpenapiRails::Generators::InstallGenerator do
-  let(:destination) { File.join(Dir.tmpdir, "openapi_rails_gen_#{SecureRandom.hex(4)}") }
+RSpec.describe OpenapiRuby::Generators::InstallGenerator do
+  let(:destination) { File.join(Dir.tmpdir, "openapi_ruby_gen_#{SecureRandom.hex(4)}") }
 
   before do
     FileUtils.mkdir_p(destination)
@@ -25,10 +25,10 @@ RSpec.describe OpenapiRails::Generators::InstallGenerator do
 
   it "creates the initializer" do
     run_generator
-    path = File.join(destination, "config/initializers/openapi_rails.rb")
+    path = File.join(destination, "config/initializers/openapi_ruby.rb")
     expect(File.exist?(path)).to be true
     content = File.read(path)
-    expect(content).to include("OpenapiRails.configure")
+    expect(content).to include("OpenapiRuby.configure")
     expect(content).to include("config.schemas")
   end
 
@@ -36,7 +36,7 @@ RSpec.describe OpenapiRails::Generators::InstallGenerator do
     run_generator
     path = File.join(destination, "spec/openapi_helper.rb")
     expect(File.exist?(path)).to be true
-    expect(File.read(path)).to include("openapi_rails/rspec")
+    expect(File.read(path)).to include("openapi_ruby/rspec")
   end
 
   it "creates component directories" do
@@ -54,6 +54,6 @@ RSpec.describe OpenapiRails::Generators::InstallGenerator do
   it "adds engine route" do
     run_generator
     content = File.read(File.join(destination, "config/routes.rb"))
-    expect(content).to include("OpenapiRails::Engine")
+    expect(content).to include("OpenapiRuby::Engine")
   end
 end

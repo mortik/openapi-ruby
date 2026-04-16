@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "openapi_rails"
+require "openapi_ruby"
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
@@ -17,8 +17,8 @@ RSpec.configure do |config|
   config.order = :random
 
   config.before do
-    OpenapiRails.reset_configuration!
-    OpenapiRails::Components::Registry.instance.clear!
-    OpenapiRails::DSL::MetadataStore.clear!
+    OpenapiRuby.reset_configuration!
+    OpenapiRuby::Components::Registry.instance.clear!
+    OpenapiRuby::DSL::MetadataStore.clear!
   end
 end

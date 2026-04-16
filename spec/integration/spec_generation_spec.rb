@@ -94,11 +94,11 @@ RSpec.describe "OpenAPI spec generation" do
   end
 
   describe "generation pipeline" do
-    let(:output_dir) { File.join(Dir.tmpdir, "openapi_rails_gen_#{SecureRandom.hex(4)}") }
+    let(:output_dir) { File.join(Dir.tmpdir, "openapi_ruby_gen_#{SecureRandom.hex(4)}") }
 
     before do
-      OpenapiRails::DSL::MetadataStore.clear!
-      OpenapiRails::Components::Registry.instance.clear!
+      OpenapiRuby::DSL::MetadataStore.clear!
+      OpenapiRuby::Components::Registry.instance.clear!
       Dir[File.expand_path("../dummy/app/api_components/**/*.rb", __dir__)].each { |f| load f }
     end
 
@@ -110,9 +110,9 @@ RSpec.describe "OpenAPI spec generation" do
       register_posts_endpoints
 
       # Generate
-      OpenapiRails.configuration.schema_output_dir = output_dir
+      OpenapiRuby.configuration.schema_output_dir = output_dir
       config = {info: {title: "Dummy API", version: "1.0.0"}, servers: [{url: "/"}]}
-      writer = OpenapiRails::Generator::SchemaWriter.new(:public_api, config)
+      writer = OpenapiRuby::Generator::SchemaWriter.new(:public_api, config)
       path = writer.write!
 
       generated = YAML.safe_load_file(path)
@@ -135,7 +135,7 @@ RSpec.describe "OpenAPI spec generation" do
   private
 
   def register_users_endpoints
-    users_ctx = OpenapiRails::DSL::Context.new("/api/v1/users", schema_name: :public_api)
+    users_ctx = OpenapiRuby::DSL::Context.new("/api/v1/users", schema_name: :public_api)
     users_ctx.get("List users") do
       tags "Users"
       operationId "listUsers"
@@ -155,9 +155,9 @@ RSpec.describe "OpenAPI spec generation" do
       response(201, "user created") { schema "$ref" => "#/components/schemas/User" }
       response(422, "validation errors") { schema "$ref" => "#/components/schemas/ValidationErrors" }
     end
-    OpenapiRails::DSL::MetadataStore.register(users_ctx)
+    OpenapiRuby::DSL::MetadataStore.register(users_ctx)
 
-    user_ctx = OpenapiRails::DSL::Context.new("/api/v1/users/{id}", schema_name: :public_api)
+    user_ctx = OpenapiRuby::DSL::Context.new("/api/v1/users/{id}", schema_name: :public_api)
     user_ctx.parameter(name: :id, in: :path, schema: {type: :integer})
     user_ctx.get("Get a user") do
       tags "Users"
@@ -183,11 +183,11 @@ RSpec.describe "OpenAPI spec generation" do
       response(204, "user deleted")
       response(404, "user not found") { schema "$ref" => "#/components/schemas/ErrorResponse" }
     end
-    OpenapiRails::DSL::MetadataStore.register(user_ctx)
+    OpenapiRuby::DSL::MetadataStore.register(user_ctx)
   end
 
   def register_posts_endpoints
-    posts_ctx = OpenapiRails::DSL::Context.new("/api/v1/posts", schema_name: :public_api)
+    posts_ctx = OpenapiRuby::DSL::Context.new("/api/v1/posts", schema_name: :public_api)
     posts_ctx.get("List posts") do
       tags "Posts"
       operationId "listPosts"
@@ -208,9 +208,9 @@ RSpec.describe "OpenAPI spec generation" do
       response(201, "post created") { schema "$ref" => "#/components/schemas/Post" }
       response(422, "validation errors") { schema "$ref" => "#/components/schemas/ValidationErrors" }
     end
-    OpenapiRails::DSL::MetadataStore.register(posts_ctx)
+    OpenapiRuby::DSL::MetadataStore.register(posts_ctx)
 
-    post_ctx = OpenapiRails::DSL::Context.new("/api/v1/posts/{id}", schema_name: :public_api)
+    post_ctx = OpenapiRuby::DSL::Context.new("/api/v1/posts/{id}", schema_name: :public_api)
     post_ctx.parameter(name: :id, in: :path, schema: {type: :integer})
     post_ctx.get("Get a post") do
       tags "Posts"
@@ -225,6 +225,6 @@ RSpec.describe "OpenAPI spec generation" do
       response(204, "post deleted")
       response(404, "post not found") { schema "$ref" => "#/components/schemas/ErrorResponse" }
     end
-    OpenapiRails::DSL::MetadataStore.register(post_ctx)
+    OpenapiRuby::DSL::MetadataStore.register(post_ctx)
   end
 end

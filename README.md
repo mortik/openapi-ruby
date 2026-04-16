@@ -1,4 +1,4 @@
-# openapi_rails
+# openapi_ruby
 
 A unified OpenAPI 3.1 toolkit for Rails that combines test-driven spec generation, reusable schema components as Ruby classes, and runtime request/response validation middleware. Works with both RSpec and Minitest.
 
@@ -24,18 +24,18 @@ Replaces [rswag](https://github.com/rswag/rswag), [rswag-schema-components](http
 Add to your Gemfile:
 
 ```ruby
-gem "openapi_rails"
+gem "openapi-ruby"
 ```
 
 Run the install generator:
 
 ```bash
-rails generate openapi_rails:install
+rails generate openapi_ruby:install
 ```
 
 This creates:
 
-- `config/initializers/openapi_rails.rb` — configuration
+- `config/initializers/openapi_ruby.rb` — configuration
 - `spec/openapi_helper.rb` or `test/openapi_helper.rb` — test helper
 - `app/api_components/` — directory for schema components
 - `swagger/` — output directory for generated specs
@@ -44,8 +44,8 @@ This creates:
 ## Configuration
 
 ```ruby
-# config/initializers/openapi_rails.rb
-OpenapiRails.configure do |config|
+# config/initializers/openapi_ruby.rb
+OpenapiRuby.configure do |config|
   config.schemas = {
     public_api: {
       info: { title: "My API", version: "v1" },
@@ -75,7 +75,7 @@ Define your API schemas as Ruby classes:
 ```ruby
 # app/api_components/schemas/user.rb
 class Schemas::User
-  include OpenapiRails::Components::Base
+  include OpenapiRuby::Components::Base
 
   schema(
     type: :object,
@@ -108,7 +108,7 @@ Child schemas deep-merge with their parent — `AdminUser` has all of `User`'s p
 
 ```ruby
 class SecuritySchemes::BearerAuth
-  include OpenapiRails::Components::Base
+  include OpenapiRuby::Components::Base
   component_type :securitySchemes
 
   schema(
@@ -127,7 +127,7 @@ By default, snake_case keys are converted to camelCase in the output. Disable gl
 
 ```ruby
 class Schemas::User
-  include OpenapiRails::Components::Base
+  include OpenapiRuby::Components::Base
   skip_key_transformation true
   # ...
 end
@@ -139,7 +139,7 @@ Assign components to scopes for multiple API specs:
 
 ```ruby
 class Schemas::AdminUser
-  include OpenapiRails::Components::Base
+  include OpenapiRuby::Components::Base
   component_scopes :admin
   # ...
 end
@@ -161,7 +161,7 @@ Use the controller helper:
 
 ```ruby
 class Api::V1::UsersController < ActionController::API
-  include OpenapiRails::ControllerHelpers
+  include OpenapiRuby::ControllerHelpers
 
   def create
     user = User.new(openapi_permit(Schemas::UserInput))
@@ -175,15 +175,15 @@ Works with [ActionPolicy](https://github.com/palkan/action_policy) — use `perm
 ### Component Generator
 
 ```bash
-rails generate openapi_rails:component User schemas
-rails generate openapi_rails:component BearerAuth security_schemes
+rails generate openapi_ruby:component User schemas
+rails generate openapi_ruby:component BearerAuth security_schemes
 ```
 
 ## Testing with RSpec
 
 ```ruby
 # spec/openapi_helper.rb
-require "openapi_rails/rspec"
+require "openapi_ruby/rspec"
 ```
 
 ```ruby
@@ -273,7 +273,7 @@ end
 
 ```ruby
 # test/test_helper.rb
-require "openapi_rails/minitest"
+require "openapi_ruby/minitest"
 ```
 
 ```ruby
@@ -281,7 +281,7 @@ require "openapi_rails/minitest"
 require "test_helper"
 
 class UsersApiTest < ActionDispatch::IntegrationTest
-  include OpenapiRails::Adapters::Minitest::DSL
+  include OpenapiRuby::Adapters::Minitest::DSL
 
   openapi_schema :public_api
 
@@ -331,7 +331,7 @@ end
 Generate OpenAPI spec files after running tests:
 
 ```bash
-rake openapi_rails:generate
+rake openapi_ruby:generate
 ```
 
 Or automatically after the test suite via the `after(:suite)` / `Minitest.after_run` hooks (enabled by default).
@@ -341,7 +341,7 @@ Or automatically after the test suite via the `after(:suite)` / `Minitest.after_
 Validate requests and responses against your OpenAPI spec at runtime:
 
 ```ruby
-OpenapiRails.configure do |config|
+OpenapiRuby.configure do |config|
   config.request_validation = :enabled    # :enabled, :disabled, :warn_only
   config.response_validation = :enabled
 end
@@ -372,7 +372,7 @@ config.schemas = {
 Enable optional Swagger UI:
 
 ```ruby
-OpenapiRails.configure do |config|
+OpenapiRuby.configure do |config|
   config.ui_enabled = true
 end
 ```
@@ -383,7 +383,7 @@ Visit `/api-docs/ui` to see your API documentation. Schema files are served at `
 
 ```ruby
 # config/routes.rb
-mount OpenapiRails::Engine => "/api-docs"
+mount OpenapiRuby::Engine => "/api-docs"
 ```
 
 ## License

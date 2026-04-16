@@ -8,5 +8,5 @@ Rails.application.routes.draw do
     end
   end
 
-  mount OpenapiRails::Engine => "/api-docs"
+  mount OpenapiRuby::Engine => "/api-docs"
 end
