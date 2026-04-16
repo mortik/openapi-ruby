@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "openapi_ruby"
+require "cgi"
 require "uri"
 
 module OpenapiRuby
@@ -104,8 +105,8 @@ module OpenapiRuby
 
       # Instance-level helper methods mixed into RSpec examples
       module ExampleHelpers
-        private
-
+        # submit_openapi_request is public so specs can call it directly
+        # (e.g., for rate limiting tests that need multiple requests)
         def submit_openapi_request(metadata)
           path = resolve_path(metadata)
           operation = find_in_metadata(metadata, :openapi_operation)
@@ -118,7 +119,7 @@ module OpenapiRuby
           operation&.parameters&.each do |param|
             name = param["name"]
             val = resolve_let(name.to_sym)
-            next unless val
+            next if val.nil?
 
             case param["in"]
             when "query" then params[name] = val
@@ -126,19 +127,39 @@ module OpenapiRuby
             end
           end
 
+          # Resolve security scheme parameters from let variables
+          resolve_security_params(operation, metadata).each do |param|
+            val = resolve_let(param[:name].to_sym)
+            next unless val
+
+            case param[:in].to_s
+            when "header" then headers[param[:name]] = val
+            when "query" then params[param[:name]] = val
+            when "cookie" then headers["Cookie"] = "#{param[:name]}=#{val}"
+            end
+          end
+
           method = operation&.verb || "get"
           # Default to JSON Accept header for API requests
           headers["Accept"] ||= "application/json"
-          request_args = {params: params, headers: headers}
 
           if body
             content_type = operation&.request_body_definition&.dig("content")&.keys&.first || "application/json"
             if content_type.include?("form-data") || content_type.include?("x-www-form-urlencoded")
-              request_args[:params] = body
+              request_args = {params: body, headers: headers}
             else
-              request_args[:params] = body.is_a?(String) ? body : body.to_json
-              request_args[:headers] = headers.merge("Content-Type" => content_type)
+              request_args = {
+                params: body.is_a?(String) ? body : body.to_json,
+                headers: headers.merge("Content-Type" => content_type)
+              }
             end
+            # Append query params to path when body is present
+            if params.any?
+              query_string = params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
+              path = "#{path}?#{query_string}"
+            end
+          else
+            request_args = {params: params, headers: headers}
           end
 
           send(method.to_sym, path, **request_args)
@@ -156,6 +177,8 @@ module OpenapiRuby
               "Response body: #{response.body}"
           end
         end
+
+        private
 
         def resolve_path(metadata)
           path_ctx = find_in_metadata(metadata, :openapi_path_context)
@@ -192,6 +215,42 @@ module OpenapiRuby
           URI.parse(server_url).path.chomp("/")
         rescue URI::InvalidURIError
           ""
+        end
+
+        def resolve_security_params(operation, metadata)
+          security_list = operation&.instance_variable_get(:@security_list)
+          return [] unless security_list
+
+          schema_name = find_in_metadata(metadata, :openapi_schema_name)
+          return [] unless schema_name
+
+          config = OpenapiRuby.configuration
+          schema_config = config.schemas[schema_name.to_sym] || config.schemas[schema_name.to_s]
+          return [] unless schema_config
+
+          security_schemes = schema_config.dig(:components, :securitySchemes) ||
+            schema_config.dig("components", "securitySchemes") || {}
+
+          # Also check registered components
+          if security_schemes.empty?
+            loader = Components::Loader.new(scope: schema_name.to_s.tr("/", "_").to_sym)
+            security_schemes = loader.security_schemes
+          end
+
+          scheme_names = security_list.flat_map { |s| s.is_a?(Hash) ? s.keys.map(&:to_s) : [] }
+
+          scheme_names.filter_map do |name|
+            scheme = security_schemes[name] || security_schemes[name.to_sym]
+            next unless scheme
+
+            type = scheme[:type] || scheme["type"]
+            if type.to_s == "apiKey"
+              {name: (scheme[:name] || scheme["name"]).to_s, in: (scheme[:in] || scheme["in"]).to_s}
+            else
+              # OAuth2, http bearer, etc. → Authorization header
+              {name: "Authorization", in: "header"}
+            end
+          end.uniq { |p| [p[:name], p[:in]] }
         end
 
         def resolve_let(name)
