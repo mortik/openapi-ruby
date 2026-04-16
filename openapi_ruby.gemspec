@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "A unified OpenAPI 3.1 toolkit for Rails that combines test-driven spec generation, " \
                      "reusable schema components as Ruby classes, and runtime request/response validation " \
                      "middleware. Works with both RSpec and Minitest."
-  spec.homepage = "https://github.com/mortik/openapi-ruby"
+  spec.homepage = "https://github.com/openapi-ruby/openapi-ruby"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
