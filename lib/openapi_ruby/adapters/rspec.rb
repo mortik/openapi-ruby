@@ -84,8 +84,8 @@ module OpenapiRuby
           end
         end
 
-        def response(status_code, description, &block)
-          response_ctx = @operation.response(status_code, description)
+        def response(status_code, description, hidden: false, &block)
+          response_ctx = @operation.response(status_code, description, hidden: hidden)
           operation = @operation
 
           @example_group.context "response #{status_code} #{description}" do

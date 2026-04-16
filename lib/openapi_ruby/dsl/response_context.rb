@@ -3,11 +3,12 @@
 module OpenapiRuby
   module DSL
     class ResponseContext
-      attr_reader :status_code, :description, :schema_definition, :headers, :examples, :links
+      attr_reader :status_code, :description, :schema_definition, :headers, :examples, :links, :hidden
 
-      def initialize(status_code, description)
+      def initialize(status_code, description, hidden: false)
         @status_code = status_code.to_s
         @description = description
+        @hidden = hidden
         @schema_definition = nil
         @headers = {}
         @examples = {}

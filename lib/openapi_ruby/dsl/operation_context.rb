@@ -55,7 +55,16 @@ module OpenapiRuby
       end
 
       def request_body(attributes = {})
-        @request_body_definition = deep_stringify(attributes)
+        stringified = deep_stringify(attributes)
+
+        # Shorthand: if schema is provided without content, wrap it in
+        # content: { "application/json" => { schema: ... } }
+        if stringified["schema"] && !stringified["content"]
+          schema = stringified.delete("schema")
+          stringified["content"] = {"application/json" => {"schema" => schema}}
+        end
+
+        @request_body_definition = stringified
       end
 
       def request_body_example(value:, name: "example", summary: nil)
@@ -64,8 +73,8 @@ module OpenapiRuby
         @request_examples << entry
       end
 
-      def response(status_code, description, &block)
-        ctx = ResponseContext.new(status_code, description)
+      def response(status_code, description, hidden: false, &block)
+        ctx = ResponseContext.new(status_code, description, hidden: hidden)
         ctx.produces(*@produces_list) if @produces_list.any?
         ctx.instance_eval(&block) if block
         @responses[status_code.to_s] = ctx
@@ -84,6 +93,7 @@ module OpenapiRuby
 
         result["responses"] = {}
         @responses.each do |code, ctx|
+          next if ctx.hidden
           result["responses"][code] = ctx.to_openapi
         end
 
