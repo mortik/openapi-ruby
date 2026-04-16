@@ -25,6 +25,9 @@ jobs:
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
     environment: rubygems
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -32,13 +35,10 @@ jobs:
         with:
           ruby-version: "3.4"
 
-      - name: Build gem
-        run: gem build openapi_rails.gemspec
+      - name: Configure RubyGems credentials
+        uses: rubygems/configure-rubygems-credentials@v1
 
-      - name: Push to RubyGems
+      - name: Build and push gem
         run: |
-          mkdir -p ~/.gem
-          echo "---" > ~/.gem/credentials
-          echo ":rubygems_api_key: ${{ secrets.RUBYGEMS_API_KEY }}" >> ~/.gem/credentials
-          chmod 0600 ~/.gem/credentials
+          gem build openapi_rails.gemspec
           gem push openapi_rails-*.gem
