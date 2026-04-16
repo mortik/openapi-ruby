@@ -93,6 +93,9 @@ module OpenapiRuby
             metadata[:openapi_operation] = operation
             metadata[:openapi_response] = response_ctx
 
+            # Extend this example group (and nested contexts) with response DSL
+            extend ResponseDSL
+
             # Evaluate response-level DSL
             resp_proxy = ResponseProxy.new(self, response_ctx)
             resp_proxy.instance_eval(&block) if block
@@ -111,6 +114,70 @@ module OpenapiRuby
 
         def respond_to_missing?(name, include_private = false)
           @example_group.respond_to?(name, include_private) || super
+        end
+      end
+
+      # Module extended onto response example groups so run_test! and schema
+      # are available in nested context/describe blocks (inherited as class methods).
+      # Uses metadata (which is inherited by nested contexts) to find the response context.
+      module ResponseDSL
+        def run_test!(description = nil, &block)
+          response_ctx = metadata[:openapi_response]
+
+          it(description || "returns #{response_ctx.status_code}") do |example|
+            example_metadata = example.metadata
+
+            path = resolve_path(example_metadata)
+            operation = find_operation(example_metadata)
+
+            params = resolve_let(:request_params) || {}
+            headers = resolve_let(:request_headers) || {}
+            body = resolve_let(:request_body)
+
+            operation&.parameters&.each do |param|
+              name = param["name"]
+              val = resolve_let(name.to_sym)
+              next unless val
+
+              case param["in"]
+              when "query"
+                params[name] = val
+              when "header"
+                headers[name] = val
+              end
+            end
+
+            method = operation&.verb || "get"
+            request_args = {params: params, headers: headers}
+
+            if body
+              content_type = operation&.request_body_definition&.dig("content")&.keys&.first || "application/json"
+              if content_type.include?("json")
+                request_args[:params] = body.is_a?(String) ? body : body.to_json
+                request_args[:headers] = (headers || {}).merge("Content-Type" => content_type)
+              elsif content_type.include?("form-data") || content_type.include?("x-www-form-urlencoded")
+                request_args[:params] = body
+              else
+                request_args[:params] = body.is_a?(String) ? body : body.to_json
+                request_args[:headers] = (headers || {}).merge("Content-Type" => content_type)
+              end
+            end
+
+            send(method, path, **request_args)
+
+            expected_status = response_ctx.status_code.to_i
+            actual_status = response.status
+            unless actual_status == expected_status
+              raise OpenapiRuby::ResponseValidationError,
+                "Expected status #{expected_status}, got #{actual_status}"
+            end
+
+            instance_eval(&block) if block
+          end
+        end
+
+        def schema(definition)
+          metadata[:openapi_response].schema(definition)
         end
       end
 
