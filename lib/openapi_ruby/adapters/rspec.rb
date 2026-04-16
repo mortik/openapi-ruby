@@ -145,10 +145,10 @@ module OpenapiRuby
 
           if body
             content_type = operation&.request_body_definition&.dig("content")&.keys&.first || "application/json"
-            if content_type.include?("form-data") || content_type.include?("x-www-form-urlencoded")
-              request_args = {params: body, headers: headers}
+            request_args = if content_type.include?("form-data") || content_type.include?("x-www-form-urlencoded")
+              {params: body, headers: headers}
             else
-              request_args = {
+              {
                 params: body.is_a?(String) ? body : body.to_json,
                 headers: headers.merge("Content-Type" => content_type)
               }
