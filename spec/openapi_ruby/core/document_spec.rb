@@ -39,10 +39,15 @@ RSpec.describe OpenapiRuby::Core::Document do
       expect(doc.to_h["openapi"]).to eq("3.1.1")
     end
 
-    it "rejects OpenAPI versions below 3.1" do
+    it "rejects OpenAPI versions below 3.0" do
       expect {
-        described_class.new(openapi_version: "3.0.3")
-      }.to raise_error(OpenapiRuby::ConfigurationError, /must be >= 3.1.0/)
+        described_class.new(openapi_version: "2.0.0")
+      }.to raise_error(OpenapiRuby::ConfigurationError, /must be >= 3.0.0/)
+    end
+
+    it "accepts OpenAPI 3.0.x versions" do
+      doc = described_class.new(openapi_version: "3.0.3")
+      expect(doc.to_h["openapi"]).to eq("3.0.3")
     end
 
     it "defaults to 3.1.0" do

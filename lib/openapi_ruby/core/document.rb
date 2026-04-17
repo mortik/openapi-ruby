@@ -3,7 +3,7 @@
 module OpenapiRuby
   module Core
     class Document
-      MIN_OPENAPI_VERSION = "3.1.0"
+      MIN_OPENAPI_VERSION = "3.0.0"
       DEFAULT_OPENAPI_VERSION = "3.1.0"
 
       attr_reader :data
