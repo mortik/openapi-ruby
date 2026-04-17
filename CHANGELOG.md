@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.6.0](https://github.com/openapi-ruby/openapi-ruby/compare/v2.5.2...v2.6.0) (2026-04-17)
+
+
+### Features
+
+* support OpenAPI 3.0.x schemas ([caa831b](https://github.com/openapi-ruby/openapi-ruby/commit/caa831b7c2ab6d6101e371dbd92b009b471bac68))
+
+
+### Bug Fixes
+
+* use component_scope from schema config for security scheme resolution ([a49854b](https://github.com/openapi-ruby/openapi-ruby/commit/a49854b3e45f9fc403fd3e124ee4929ba01e7fae))
+
 ## [2.5.2](https://github.com/openapi-ruby/openapi-ruby/compare/v2.5.1...v2.5.2) (2026-04-17)
 
 
