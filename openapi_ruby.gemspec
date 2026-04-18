@@ -8,10 +8,10 @@ Gem::Specification.new do |spec|
   spec.authors = ["Morten Hartvig"]
   spec.email = ["morten@hartvigsen.dev"]
 
-  spec.summary = "OpenAPI 3.1 toolkit for Rails — spec generation, schema components, and runtime validation"
-  spec.description = "A unified OpenAPI 3.1 toolkit for Rails that combines test-driven spec generation, " \
+  spec.summary = "OpenAPI 3.0/3.1 toolkit for Rails — spec generation, schema components, and runtime validation"
+  spec.description = "A unified OpenAPI toolkit for Rails that combines test-driven spec generation, " \
                      "reusable schema components as Ruby classes, and runtime request/response validation " \
-                     "middleware. Works with both RSpec and Minitest."
+                     "middleware. Supports OpenAPI 3.0 and 3.1. Works with both RSpec and Minitest."
   spec.homepage = "https://github.com/openapi-ruby/openapi-ruby"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"

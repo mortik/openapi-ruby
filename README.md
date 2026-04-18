@@ -5,14 +5,14 @@
 <h1 align="center">openapi_ruby</h1>
 
 <p align="center">
-  A unified OpenAPI 3.1 toolkit for Rails that combines test-driven spec generation, reusable schema components as Ruby classes, and runtime request/response validation middleware. Works with both RSpec and Minitest.
+  A unified OpenAPI toolkit for Rails that combines test-driven spec generation, reusable schema components as Ruby classes, and runtime request/response validation middleware. Supports OpenAPI 3.0 and 3.1. Works with both RSpec and Minitest.
 </p>
 
 Replaces [rswag](https://github.com/rswag/rswag), [rswag-schema-components](https://github.com/101skills-gmbh/rswag-schema-components), and [committee](https://github.com/interagent/committee) with a single gem.
 
 ## Key Features
 
-- **OpenAPI 3.1** with JSON Schema 2020-12 (via [json_schemer](https://github.com/davishmcclurg/json_schemer))
+- **OpenAPI 3.0 & 3.1** with JSON Schema 2020-12 (via [json_schemer](https://github.com/davishmcclurg/json_schemer))
 - **Test-framework agnostic** — works with RSpec and Minitest
 - **Schema components** as Ruby classes with inheritance
 - **Runtime middleware** for request/response validation with deep type checking
@@ -73,6 +73,45 @@ OpenapiRuby.configure do |config|
   config.ui_enabled = false
 end
 ```
+
+### OpenAPI Version
+
+The default OpenAPI version is 3.1.0. To generate 3.0.x schemas (e.g., when using `nullable: true`):
+
+```ruby
+config.schemas = {
+  public_api: {
+    openapi_version: "3.0.3",
+    info: { title: "My API", version: "v1" },
+    servers: [{ url: "/" }]
+  }
+}
+```
+
+### Multiple Schemas with Scopes
+
+For projects with multiple APIs, use `component_scope` to partition components:
+
+```ruby
+config.schemas = {
+  "internal/v1/schema": {
+    info: { title: "Internal API", version: "v1" },
+    component_scope: :internal_v1
+  },
+  "public/v2/schema": {
+    info: { title: "Public API", version: "v2" },
+    component_scope: :public_v2
+  }
+}
+
+# Infer scopes from directory structure (e.g., internal/v1/schemas/user.rb → :internal_v1)
+config.component_scope_paths = {
+  "internal/v1" => :internal_v1,
+  "public/v2" => :public_v2
+}
+```
+
+Components are automatically scoped based on their file path. Use `shared_component` to include a component in all schemas, or `component_scopes :scope1, :scope2` to assign explicitly.
 
 ## Schema Components
 
@@ -334,13 +373,15 @@ end
 
 ## Spec Generation
 
-Generate OpenAPI spec files after running tests:
+Generate OpenAPI spec files without running tests:
 
 ```bash
 rake openapi_ruby:generate
 ```
 
-Or automatically after the test suite via the `after(:suite)` / `Minitest.after_run` hooks (enabled by default).
+This uses RSpec `--dry-run` (or loads Minitest files) to collect API definitions and write schemas. It auto-detects the test framework, or you can set `FRAMEWORK=rspec` or `FRAMEWORK=minitest`. Custom patterns: `PATTERN="packs/*/spec/**/*_spec.rb"`.
+
+Schemas are also generated automatically after running the full test suite via `after(:suite)` / `Minitest.after_run` hooks.
 
 ## Runtime Middleware
 
