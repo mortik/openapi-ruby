@@ -63,7 +63,7 @@ module OpenapiRuby
           expanded = File.expand_path(path)
           next unless Dir.exist?(expanded)
 
-          Dir.glob(File.join(expanded, "**/")).each do |dir_path|
+          Dir.glob(File.join(expanded, "**/")).sort.each do |dir_path|
             relative = dir_path.sub("#{expanded}/", "").chomp("/")
             next if relative.empty?
 

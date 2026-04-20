@@ -111,6 +111,9 @@ module OpenapiRuby
           end
           result.delete(type_key) if result[type_key].empty?
         end
+        # Sort component names alphabetically within each type for deterministic output
+        # regardless of file system ordering or load order.
+        result.each { |type_key, entries| result[type_key] = entries.sort_by { |k, _| k }.to_h }
         result
       end
     end

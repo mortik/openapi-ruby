@@ -44,7 +44,7 @@ def generate_with_rspec
   # running any tests. Spec files pull in RSpec and the openapi_ruby
   # adapter via their own require chains (e.g. require "openapi_helper").
   pattern.split(",").each do |p|
-    Dir.glob(p.strip).each { |f| require File.expand_path(f) }
+    Dir.glob(p.strip).sort.each { |f| require File.expand_path(f) }
   end
 
   # Generate schemas from the registered contexts
@@ -61,7 +61,7 @@ def generate_with_minitest
   # Load all test files to trigger api_path registrations.
   # Minitest's api_path registers DSL contexts at class load time,
   # so simply requiring the files is enough.
-  Dir.glob(pattern).each { |f| require File.expand_path(f) }
+  Dir.glob(pattern).sort.each { |f| require File.expand_path(f) }
 
   # Generate schemas from the registered contexts
   OpenapiRuby::Generator::SchemaWriter.generate_all!
