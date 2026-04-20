@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/openapi-ruby/openapi-ruby/compare/v2.6.1...v3.0.0) (2026-04-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* Schema files are no longer written automatically after test suite runs. Use `rake openapi_ruby:generate` (or `bin/generate-schema`) to generate schemas explicitly. This prevents partial schema overwrites when running a subset of specs.
+
+### Bug Fixes
+
+* stop writing schemas during test runs, use require-based generation ([b16aba5](https://github.com/openapi-ruby/openapi-ruby/commit/b16aba57e0d8d9f7c99165942ed58efb0d26d68e))
+
 ## [2.6.1](https://github.com/openapi-ruby/openapi-ruby/compare/v2.6.0...v2.6.1) (2026-04-17)
 
 
