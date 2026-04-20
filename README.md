@@ -379,9 +379,9 @@ Generate OpenAPI spec files without running tests:
 rake openapi_ruby:generate
 ```
 
-This uses RSpec `--dry-run` (or loads Minitest files) to collect API definitions and write schemas. It auto-detects the test framework, or you can set `FRAMEWORK=rspec` or `FRAMEWORK=minitest`. Custom patterns: `PATTERN="packs/*/spec/**/*_spec.rb"`.
+This loads spec/test files to collect API definitions and writes schemas without running any tests. It auto-detects the test framework, or you can set `FRAMEWORK=rspec` or `FRAMEWORK=minitest`. Custom patterns: `PATTERN="packs/*/spec/**/*_spec.rb"`.
 
-Schemas are also generated automatically after running the full test suite via `after(:suite)` / `Minitest.after_run` hooks.
+Schemas are **only** written by the rake task — running tests (`bundle exec rspec`, `rails test`) does not generate or overwrite schema files. This prevents partial schema overwrites when running a subset of specs.
 
 ## Runtime Middleware
 
