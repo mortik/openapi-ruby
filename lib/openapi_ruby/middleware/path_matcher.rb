@@ -21,7 +21,11 @@ module OpenapiRuby
       private
 
       def build_matchers(templates)
-        templates.map do |template|
+        # Sort templates so that static paths come before parameterized ones.
+        # This ensures `/admin_users/me` matches before `/admin_users/{id}`.
+        sorted = templates.sort_by { |t| [t.count("{"), t] }
+
+        sorted.map do |template|
           pattern = Regexp.new("\\A" + template.gsub(/\{(\w+)\}/) { "(?<#{::Regexp.last_match(1)}>[^/]+)" } + "\\z")
           [template, pattern]
         end

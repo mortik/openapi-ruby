@@ -139,8 +139,8 @@ module OpenapiRuby
         errors = []
         # Coerce string values for validation based on schema type
         coerced = coerce_for_validation(value, schema)
-        schemer = JSONSchemer.schema(schema)
-        schemer.validate(coerced).each do |err|
+        schema_validator = resolve_schema(schema)
+        schema_validator.validate(coerced).each do |err|
           msg = err["error"] || err["type"] || "validation failed"
           errors << "Invalid #{context}: #{msg}"
         end
@@ -170,9 +170,26 @@ module OpenapiRuby
       end
 
       def coerce_for_validation(value, schema)
-        return value unless value.is_a?(String)
+        resolved = resolve_schema_definition(schema)
 
-        case schema["type"]
+        if value.is_a?(Hash) && resolved.is_a?(Hash)
+          properties = resolved["properties"] || {}
+          value.each_with_object({}) do |(k, v), coerced|
+            prop_schema = properties[k] || properties[k.to_s]
+            coerced[k] = prop_schema ? coerce_for_validation(v, prop_schema) : v
+          end
+        elsif value.is_a?(String)
+          coerce_string(value, resolved)
+        else
+          value
+        end
+      rescue ArgumentError, TypeError
+        value
+      end
+
+      def coerce_string(value, schema)
+        type = schema.is_a?(Hash) ? schema["type"] : nil
+        case type
         when "integer"
           Integer(value)
         when "number"
@@ -188,6 +205,19 @@ module OpenapiRuby
         end
       rescue ArgumentError, TypeError
         value
+      end
+
+      def resolve_schema_definition(schema)
+        return schema unless schema.is_a?(Hash) && schema["$ref"]
+
+        ref_path = schema["$ref"].sub("#/", "").split("/")
+        ref_path.reduce(document) { |doc, key| doc&.dig(key) } || schema
+      rescue
+        schema
+      end
+
+      def document
+        @resolver.respond_to?(:document) ? @resolver.document : {}
       end
 
       def read_request_body(request)
