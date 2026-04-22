@@ -38,9 +38,10 @@ module OpenapiRuby
           builder.add_path(context.path_template, context.to_openapi)
         end
 
-        # Merge components from registry
+        # Merge components from registry (Loader ensures files are loaded)
         scope = @schema_config[:component_scope]
-        components = Components::Registry.instance.to_openapi_hash(scope: scope)
+        loader = Components::Loader.new(scope: scope)
+        components = loader.to_openapi_hash
         builder.merge_components(components)
 
         builder.build
