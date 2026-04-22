@@ -27,6 +27,23 @@ RSpec.describe OpenapiRuby::Core::Document do
       expect(doc.to_h["servers"]).to eq([{"url" => "https://api.example.com"}])
     end
 
+    it "deep-stringifies symbol keys in info" do
+      doc = described_class.new(info: {title: "My API", license: {name: "MIT", url: "https://mit.example.com"}})
+
+      info = doc.to_h["info"]
+      expect(info["license"]).to eq({"name" => "MIT", "url" => "https://mit.example.com"})
+      expect(info.keys).to all(be_a(String))
+      expect(info["license"].keys).to all(be_a(String))
+    end
+
+    it "deep-stringifies symbol keys in servers" do
+      doc = described_class.new(servers: [{url: "https://api.example.com", variables: {version: {default: "v1"}}}])
+
+      server = doc.to_h["servers"].first
+      expect(server["variables"]).to eq({"version" => {"default" => "v1"}})
+      expect(server.keys).to all(be_a(String))
+    end
+
     it "omits servers when empty" do
       doc = described_class.new(servers: [])
 

@@ -80,5 +80,70 @@ RSpec.describe OpenapiRuby::Components::Loader do
       comp = OpenapiRuby::Components::Registry.instance.all_registered_classes.find { |c| c.name == "NoInferComp" }
       expect(comp._component_scopes).to eq([])
     end
+
+    it "does not misattribute parent scope when child inherits cross-scope" do
+      # Simulate cross-scope inheritance where loading the admin file also loads
+      # the parent class (e.g., via Ruby autoloading). The admin file requires
+      # the v1 file, so both classes appear in the diff for the admin file.
+      # The Loader should still assign :v1 scope to the parent based on its
+      # conventional file path, not the file that triggered its loading.
+      v1_path = File.join(tmpdir, "v1/schemas/base_item.rb")
+      FileUtils.mkdir_p(File.dirname(v1_path))
+      File.write(v1_path, <<~RUBY)
+        module V1
+          module Schemas
+            class BaseItem
+              include OpenapiRuby::Components::Base
+              schema(type: :object)
+            end
+          end
+        end
+      RUBY
+
+      admin_path = File.join(tmpdir, "admin/v1/schemas/base_item.rb")
+      FileUtils.mkdir_p(File.dirname(admin_path))
+      # The admin file explicitly requires the v1 file (simulating autoloading)
+      File.write(admin_path, <<~RUBY)
+        require "#{v1_path}"
+        module Admin
+          module V1
+            module Schemas
+              class BaseItem < ::V1::Schemas::BaseItem
+                schema(type: :object)
+              end
+            end
+          end
+        end
+      RUBY
+
+      OpenapiRuby.configuration.component_scope_paths = {
+        "v1" => :v1,
+        "admin/v1" => :admin
+      }
+
+      loader = described_class.new(paths: [tmpdir])
+      loader.load!
+
+      v1_comp = OpenapiRuby::Components::Registry.instance.all_registered_classes.find { |c| c.name == "V1::Schemas::BaseItem" }
+      admin_comp = OpenapiRuby::Components::Registry.instance.all_registered_classes.find { |c| c.name == "Admin::V1::Schemas::BaseItem" }
+
+      expect(v1_comp._component_scopes).to eq([:v1])
+      expect(admin_comp._component_scopes).to eq([:admin])
+    end
+
+    it "sets explicitly_set for shared scope components" do
+      write_component("shared/v1/schemas/shared_item.rb", "SharedItem")
+
+      OpenapiRuby.configuration.component_scope_paths = {
+        "shared/v1" => :shared
+      }
+
+      loader = described_class.new(paths: [tmpdir])
+      loader.load!
+
+      comp = OpenapiRuby::Components::Registry.instance.all_registered_classes.find { |c| c.name == "SharedItem" }
+      expect(comp._component_scopes).to eq([])
+      expect(comp._component_scopes_explicitly_set).to be true
+    end
   end
 end

@@ -15,7 +15,7 @@ module OpenapiRuby
           "info" => normalize_info(info),
           "paths" => {}
         }
-        @data["servers"] = servers.map { |s| s.transform_keys(&:to_s) } if servers.any?
+        @data["servers"] = servers.map { |s| deep_stringify_keys(s) } if servers.any?
       end
 
       def add_path(template, path_item)
@@ -75,10 +75,21 @@ module OpenapiRuby
       end
 
       def normalize_info(info)
-        result = info.transform_keys(&:to_s)
+        result = deep_stringify_keys(info)
         result["title"] ||= ""
         result["version"] ||= "0.0.0"
         result
+      end
+
+      def deep_stringify_keys(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) { |(k, v), h| h[k.to_s] = deep_stringify_keys(v) }
+        when Array
+          obj.map { |v| deep_stringify_keys(v) }
+        else
+          obj
+        end
       end
     end
   end

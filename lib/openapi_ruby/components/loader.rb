@@ -137,6 +137,17 @@ module OpenapiRuby
           class_to_file[klass] = source_file if source_file
         end
 
+        # Correct cross-scope inheritance misattribution: when Admin::V1::Schemas::ItemPrice
+        # inherits from V1::Schemas::ItemPrice, loading the admin file auto-loads the parent
+        # via Ruby autoloading. The diff-based tracking then maps the parent to the admin file.
+        # Fix by preferring the conventional file path when it exists and differs.
+        class_to_file.each do |klass, file|
+          conventional_file = find_source_file_for(klass)
+          if conventional_file && conventional_file != file && file_scope_map.key?(conventional_file)
+            class_to_file[klass] = conventional_file
+          end
+        end
+
         # Assign scopes to all registered components based on their source file.
         class_to_file.each do |klass, file|
           next if klass._component_scopes_explicitly_set
@@ -146,6 +157,7 @@ module OpenapiRuby
 
           if inferred_scope == :shared
             klass._component_scopes = []
+            klass._component_scopes_explicitly_set = true
           else
             Registry.instance.unregister(klass)
             klass._component_scopes = [inferred_scope]
