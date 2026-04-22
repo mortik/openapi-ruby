@@ -115,9 +115,18 @@ module OpenapiRuby
           headers = resolve_let(:request_headers) || {}
           body = resolve_let(:request_body)
 
+          # rswag backward compat: support `parameter name: :input, in: :body`
+          if body.nil?
+            body_param = operation&.parameters&.find { |p| p["in"] == "body" }
+            if body_param && body_param["name"]
+              body = resolve_let(body_param["name"].to_sym)
+            end
+          end
+
           # Merge individual parameter let values
           operation&.parameters&.each do |param|
             name = param["name"]
+            next unless name
             val = resolve_let(name.to_sym)
             next if val.nil?
 

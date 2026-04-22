@@ -158,6 +158,11 @@ module OpenapiRuby
           if inferred_scope == :shared
             klass._component_scopes = []
             klass._component_scopes_explicitly_set = true
+          elsif inferred_scope.is_a?(Array)
+            Registry.instance.unregister(klass)
+            klass._component_scopes = inferred_scope
+            klass._component_scopes_explicitly_set = true
+            Registry.instance.register(klass)
           else
             Registry.instance.unregister(klass)
             klass._component_scopes = [inferred_scope]
@@ -181,7 +186,9 @@ module OpenapiRuby
 
       def infer_scope(relative_path, scope_paths)
         scope_paths.sort_by { |prefix, _| -prefix.length }.each do |prefix, scope|
-          return scope&.to_sym if relative_path.start_with?("#{prefix}/")
+          if relative_path.start_with?("#{prefix}/")
+            return scope.is_a?(Array) ? scope.map(&:to_sym) : scope&.to_sym
+          end
         end
         nil
       end

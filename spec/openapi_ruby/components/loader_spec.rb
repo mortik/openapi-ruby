@@ -145,5 +145,20 @@ RSpec.describe OpenapiRuby::Components::Loader do
       expect(comp._component_scopes).to eq([])
       expect(comp._component_scopes_explicitly_set).to be true
     end
+
+    it "assigns multiple scopes when component_scope_paths value is an array" do
+      write_component("shared/v1/schemas/multi_scope.rb", "MultiScopeComp")
+
+      OpenapiRuby.configuration.component_scope_paths = {
+        "shared/v1" => [:v1, :admin]
+      }
+
+      loader = described_class.new(paths: [tmpdir])
+      loader.load!
+
+      comp = OpenapiRuby::Components::Registry.instance.all_registered_classes.find { |c| c.name == "MultiScopeComp" }
+      expect(comp._component_scopes).to eq([:v1, :admin])
+      expect(comp._component_scopes_explicitly_set).to be true
+    end
   end
 end
