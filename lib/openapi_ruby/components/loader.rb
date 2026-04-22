@@ -17,6 +17,7 @@ module OpenapiRuby
       end
 
       def to_openapi_hash
+        ensure_loaded!
         Registry.instance.to_openapi_hash(scope: @scope)
       end
 
@@ -194,7 +195,14 @@ module OpenapiRuby
       end
 
       def filter_type(type)
+        ensure_loaded!
         to_openapi_hash[type.to_s] || {}
+      end
+
+      def ensure_loaded!
+        return if Registry.instance.all_registered_classes.any?
+
+        load!
       end
     end
   end

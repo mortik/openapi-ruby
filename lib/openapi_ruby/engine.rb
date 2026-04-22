@@ -36,9 +36,6 @@ module OpenapiRuby
       end
     end
 
-    # Components are loaded on demand via Components::Loader (e.g. in test helpers),
-    # not at boot time — avoids cross-file dependency ordering issues.
-
     private
 
     def resolve_schema_path(config, schema_name)
