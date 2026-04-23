@@ -8,11 +8,16 @@ module OpenapiRuby
       def initialize(paths: nil, scope: nil)
         @paths = paths || OpenapiRuby.configuration.component_paths
         @scope = scope&.to_sym
+        @loaded = false
+        @loading = false
       end
 
       def load!
+        @loading = true
         define_namespace_modules!
         load_component_files!
+        @loaded = true
+        @loading = false
         self
       end
 
@@ -200,7 +205,7 @@ module OpenapiRuby
       end
 
       def ensure_loaded!
-        return if Registry.instance.all_registered_classes.any?
+        return if @loaded || @loading
 
         load!
       end
