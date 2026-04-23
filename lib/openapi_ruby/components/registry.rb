@@ -89,16 +89,18 @@ module OpenapiRuby
 
       def to_openapi_hash(scope: nil)
         result = {}
+        # Track which components are scope-specific vs multi-scope/shared
+        # so scope-specific ones take precedence on name collisions.
+        specificity = {}
+
         @components.each do |type, components|
           type_key = type.to_s
           result[type_key] = {}
+          specificity[type_key] = {}
+
           components.each_value do |klass|
             next if klass._schema_hidden
-            # When filtering by scope:
-            # - Components with matching scope: included
-            # - Components explicitly marked as shared (empty scopes + explicitly_set): included
-            # - Components with non-matching scope: excluded
-            # - Components with no scope assigned (empty scopes + NOT explicitly_set): excluded
+
             if scope
               if klass._component_scopes.empty?
                 next unless klass._component_scopes_explicitly_set
@@ -107,7 +109,16 @@ module OpenapiRuby
               end
             end
 
-            result[type_key][klass.component_name] = klass.to_openapi
+            name = klass.component_name
+            is_specific = klass._component_scopes.length == 1 && klass._component_scopes.include?(scope)
+
+            # Scope-specific components take precedence over shared/multi-scope
+            if specificity[type_key][name] && !is_specific
+              next
+            end
+
+            result[type_key][name] = klass.to_openapi
+            specificity[type_key][name] = is_specific
           end
           result.delete(type_key) if result[type_key].empty?
         end
