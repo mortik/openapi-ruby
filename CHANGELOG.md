@@ -1,5 +1,26 @@
 # Changelog
 
+## [3.1.0](https://github.com/openapi-ruby/openapi-ruby/compare/v3.0.3...v3.1.0) (2026-04-24)
+
+
+### Features
+
+* auto-load components on first query instead of requiring explicit load! ([2d371d3](https://github.com/openapi-ruby/openapi-ruby/commit/2d371d3e175b52aa8d34a23f338ba9a26a7f29cb))
+* support array scope values in component_scope_paths, handle $ref params ([44d0736](https://github.com/openapi-ruby/openapi-ruby/commit/44d073675425dcdf86b1403afaf69983b69fef2c))
+
+
+### Bug Fixes
+
+* make component loading class-level to prevent duplicate load issues ([f4f3dd8](https://github.com/openapi-ruby/openapi-ruby/commit/f4f3dd8a985e758c7bbc6c663eeb5d65901248ef))
+* only inject 400 response on operations with parameters or request body ([4a571eb](https://github.com/openapi-ruby/openapi-ruby/commit/4a571eb4752c87263d37bb7c36940cd63c750cf2))
+* output path parameters at path level instead of copying to operations ([e8590d8](https://github.com/openapi-ruby/openapi-ruby/commit/e8590d888e51afec3dc9d8cc0c6066e754b54833))
+* resolve $ref schemas in query param validation, fix path matching order, coerce deep object values ([33dfd16](https://github.com/openapi-ruby/openapi-ruby/commit/33dfd16ddefc5a8c731c22130006f7f99ba0d6e7))
+* scope-specific components take precedence over shared on name collisions ([36f7676](https://github.com/openapi-ruby/openapi-ruby/commit/36f76767d7febfd9326034372bc0feed8e5626ec))
+* skip middleware during schema generation ([0b437ae](https://github.com/openapi-ruby/openapi-ruby/commit/0b437ae35b6f211a9f6c0da3e6430df846811634))
+* stop duplicating path params from adapter to operations ([75c8540](https://github.com/openapi-ruby/openapi-ruby/commit/75c85407a55fc3863551b690084b35cc98e79832))
+* use instance flag for ensure_loaded instead of registry check ([9df828a](https://github.com/openapi-ruby/openapi-ruby/commit/9df828ae6117692cc8b6edd2a6e390db46e7d991))
+* use Loader in SchemaWriter to ensure components are loaded in subprocess ([5b29714](https://github.com/openapi-ruby/openapi-ruby/commit/5b297148847af1ecf4f1e29a48793172a530c871))
+
 ## [3.0.3](https://github.com/openapi-ruby/openapi-ruby/compare/v3.0.2...v3.0.3) (2026-04-22)
 
 
